@@ -1,0 +1,32 @@
+{
+  "name": "chtv.classicplayerssh.app",
+  "displayName": "classicPlayerSsh",
+  "version": "1.0.0",
+  "description": "A sample Apache Cordova application that responds to the deviceready event.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack && cordova buil android"
+  },
+  "keywords": [
+    "ecosystem:cordova"
+  ],
+  "author": "Apache Cordova Team",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "cordova-android": "^13.0.0",
+    "cordova-sftp-plugin": "^2.0.1"
+  },
+  "cordova": {
+    "platforms": [
+      "android"
+    ],
+    "plugins": {
+      "com.jjdltc.cordova.plugin.sftp": {}
+    }
+  },
+  "dependencies": {
+    "classic-equalizer": "file:../../../classicEqualizer",
+    "segment-display": "file:../../sixteensegment"
+  }
+}

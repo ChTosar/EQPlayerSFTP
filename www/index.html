@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0"/>
+    <title>Document</title>
+    <script src="dist/bundle.js" type="module"></script>
+</head>
+<script type="importmap">
+    {
+        "imports": {
+            "segment-display": "../node_modules/segment-display/dist/bundle.min.js",
+            "classic-equalizer": "../node_modules/classic-equalizer/src/classic-equalizer.js"
+        }
+    }
+</script>
+<style>
+    body {
+        background-color: #000;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        color: white;
+        font-family: Arial, Helvetica, sans-serif;
+        --main-color: #ff2540;
+    }
+    container {
+        padding: 3% 5%;
+        display: flex;
+        justify-content: stretch;
+        flex-wrap: wrap;
+        align-content: space-between;
+        height: 100vh;
+        box-sizing: border-box;
+    }
+
+    .controllers {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .controllers .group {
+        display: flex;
+    }
+
+    .controllers button {
+        display: block;
+        font-size: 1.5rem;
+        color: var(--main-color);
+        background-color: #222222;
+        border: none;
+        width: 45px;
+        height: 45px;
+        padding: 5px;
+        margin-inline-end: 20px;
+        line-height: 0;
+        border-radius: 5px;
+        box-shadow: 0 0 1px 0px #d7f0ff;
+        cursor: pointer;
+        user-select: none;
+    }
+
+    .controllers button:last-child{
+        margin-inline-end: 0;
+    }
+
+    container canvas#progressCanvas {
+        width: 100%;
+        padding: 1rem 0 ;
+    }
+
+    .list ul {
+        display: inline-block;
+        width: 100%;
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .list li {
+        border-radius: 1px;
+        padding: 5px;
+        background: #ffffff30;
+        border: 0.5px solid #000000;
+    }
+    .slideController {
+        width: 200%;
+        overflow: hidden;
+        display: flex;
+        flex-wrap: nowrap;
+    }
+    .slideController .main,
+    .slideController .settings {
+        flex: 0 0 100%;            /* can't grow, can't shrink, fixed an 100% width */
+        width: 100%;
+    }
+    .slideController .settings {
+        margin-inline-start: 5%;
+    }
+    .slideController .settings h4 {
+        color: var(--main-color);
+    }
+
+    .settings .option {
+        display:  flex;
+        justify-content: space-between;
+        width: 215px;
+        margin-top: 1rem;
+    }
+    .settings .hidden {
+        display: none;
+    }
+
+    @font-face {
+        font-family: 'fontello';
+        src: url('./font/fontello.woff2');
+        font-weight: normal;
+        font-style: normal;
+    }
+    .icon {
+      font-family: "fontello";
+      font-style: normal;
+      font-weight: normal;
+      display: inline-block;
+      text-decoration: inherit;
+      width: 1em;
+      margin-right: .2em;
+      text-align: center;
+      line-height: 1em;
+    }
+
+</style>
+<script type="module" src="js/index.js"></script>
+<body>
+    <container class="main">
+        <segment-display type="sixteen" height="49"></segment-display>
+        <div class="slideController">
+            <div class="main">
+                <classic-equalizer audio="audio"></classic-equalizer>         
+            </div>
+            <div class="settings">
+                <h4>Theme</h4>
+
+                <div class="option">
+                    <label for="colorSelect">Colors</label>
+                    <select id="colorSelect">
+                        <option value="red">Red</option>
+                        <option value="green">Green</option>
+                        <option value="blue">Blue</option>
+                        <option value="custom">custom</option>
+                    </select>
+                </div>
+
+                <div class="customColors hidden">
+                    <div class="option">
+                        <label for="colorSelect">Primary color</label>
+                        <input type="color" id="primaryColor"/>
+                    </div>
+                    <div class="option">
+                        <label for="colorSelect">BG Color</label>
+                        <input type="color" id="bgColor"/>
+                    </div>
+                    <div class="option">
+                        <label for="colorSelect">Light Color</label>
+                        <input type="color" id="lighrColor"/>
+                    </div>
+                </div>
+
+                <h4>Ssh</h4>
+                <div class="option">
+                    <label for="colorSelect">Url</label>
+                    <input type="text" id="url"/>
+                </div>
+                <div class="option">
+                    <label for="colorSelect">Port</label>
+                    <input type="text" id="port"/>
+                </div>
+                <div class="option">
+                    <label for="colorSelect">User</label>
+                    <input type="text" id="username"/>
+                </div>
+            </div>
+        </div>
+
+        <canvas id="progressCanvas"></canvas>
+
+        <div class="controllers">
+            <div class="group">
+                <button id="play" class="icon">&#xe801;</button>
+                <button id="prev" class="icon">&#xe806;</button>
+                <button id="next" class="icon">&#xe803;</button>
+            </div>
+
+            <div class="group">
+                <button id="list" class="icon">&#xe800;</button>
+                <button id="settings" class="icon">&#xe807;</button>
+            </div>
+        </div>
+
+    </container>
+    <container class="list">
+        <ul></ul>
+    </container>
+    <audio src="./tu-cancion.mp3"></audio>
+</body>
+<script src="cordova.js"></script>
+</html>
