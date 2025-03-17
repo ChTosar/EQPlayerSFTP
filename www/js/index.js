@@ -1,5 +1,6 @@
 import "segment-display";
 import "classic-equalizer";
+import {SFTP} from './sftp.js';
 
 window.onload = () => {
 
@@ -58,7 +59,23 @@ window.onload = () => {
     speedControls();
     list();
     settings();
+    sftp();
+    window.SFTP = new SFTP();
 };
+
+function sftp() {
+
+    document.getElementById('sshConfig').addEventListener('click', () => {
+
+        const host = document.getElementById('url').value;
+        const port = document.getElementById('port').value;
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const path = document.getElementById('path').value;
+
+        window.SFTP.setConfig(host, port, username, password, path);
+    });
+}
 
 function setColors() {
 
@@ -153,32 +170,55 @@ function list() {
     const list = document.querySelector(".list ul");
     const audio = document.querySelector('audio');
     const segmentDisplay = document.querySelector('segment-display');
+    let items = [];
+    let lastCheck;
 
-    listButton.addEventListener("click", () => {
+    listButton.addEventListener("click", async () => {
         window.scrollTo({
             top: window.scrollY == 0 ? 370 : 0,
             left: 0,
             behavior: 'smooth'
-          })
-    });
-
-    const items = [
-        'Billie Eilish - everything i wanted.mp3',
-        'Billie Eilish - Ocean Eyes.mp3',
-        'C. Tangana & Paloma Mami - No te debí besar.mp3',
-        'tu-cancion.mp3'
-    ];
-    items.forEach(item => {
-        const li = document.createElement('li');
-        li.textContent = item;
-        list.appendChild(li);
-
-        li.addEventListener("click", (event) => {
-            const nombreArchivo = event.target.textContent;
-            audio.src = `./${nombreArchivo}`;
-            segmentDisplay.setAttribute('text', nombreArchivo);
         });
+        await updateList();
+        drawItems();
     });
+
+    const updateList = async () => {
+        const now = new Date().getTime();
+        if (items.length == 0 || !lastCheck || lastCheck - now > 600000) {
+            items = await window.SFTP.listDirectory();        
+            items = items.filter(item => item.isDir || item.name.endsWith(".mp3"));
+            lastCheck = now;
+        }
+    }
+
+    const drawItems = () => {
+
+        list.innerHTML = '';
+
+        items.forEach(item => {
+            const li = document.createElement('li');
+            li.textContent = (item.isDir ? '/' : '') + item.name;
+            list.appendChild(li);
+    
+            li.addEventListener("click", async (event) => {
+                const fileName = event.target.textContent;
+
+                await window.SFTP.download(fileName);
+
+                attachToplayer(fileName);
+            });
+        });
+    }
+
+    const attachToplayer = (fileName) => {
+        window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => { 
+            audio.src = fileEntry.toNativeURL();
+            segmentDisplay.setAttribute('text', fileName);
+        }, (error) => {
+            console.error(error);
+        });
+    }
 
 }
 
