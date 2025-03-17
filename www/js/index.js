@@ -1,6 +1,6 @@
 import "segment-display";
 import "classic-equalizer";
-import {SFTP} from './sftp.js';
+import { SFTP } from './sftp.js';
 
 window.onload = () => {
 
@@ -23,7 +23,7 @@ window.onload = () => {
 
     segmentDisplay.segment.SegmentInterval = 0.05;
     segmentDisplay.segment.SideBevelEnabled = false;
-    
+
     equalizer.setAttribute('height', 280);
     equalizer.setAttribute('rows', 26);
 
@@ -33,7 +33,7 @@ window.onload = () => {
     window.themeColors.bgLeds = '#222222';
 
     setColors();
-    
+
     function drawProgress() {
         const ctx = progressCanvas.getContext("2d");
         const totalPixels = Math.floor(progressCanvas.width / (pixelSize + margin));
@@ -56,9 +56,9 @@ window.onload = () => {
     }
 
     drawProgress();
-    speedControls();
-    list();
-    settings();
+    window.speedControls = new SpeedControls();
+    window.fileList = new FileList();
+    window.settings = new Settings();
     sftp();
     window.SFTP = new SFTP();
 };
@@ -92,7 +92,7 @@ function setColors() {
 
     segmentDisplay.segment.FillLight = window.themeColors.mainColor;
     segmentDisplay.segment.FillDark = window.themeColors.bgLeds;
-    segmentDisplay.segment.colorDark  = window.themeColors.mainColor;
+    segmentDisplay.segment.colorDark = window.themeColors.mainColor;
     segmentDisplay.segment.colorLight = window.themeColors.mainColor;
     segmentDisplay.segment.strokeLight = window.themeColors.mainColor;
     segmentDisplay.segment.strokeDark = window.themeColors.mainColor;
@@ -101,273 +101,268 @@ function setColors() {
     segmentDisplay.setAttribute('text', audio.getAttribute('src'));
 }
 
-function settings() {
+class Settings {
+    static #instance = null;
+    #settings;
+    #colorSelect;
+    #primaryColor;
+    #bgColor;
+    #white;
 
-    const settings = document.getElementById('settings');
-    const colorSelect = document.getElementById('colorSelect');
-    const primaryColor = document.getElementById('primaryColor');
-    const bgColor = document.getElementById('bgColor');
-    const whtie = document.getElementById('lighrColor');
-
-    settings.addEventListener('click', () => {        
-        const slideController = document.querySelector('.slideController');
-        window.scrollTo({top: 0, left: 0, behavior: 'smooth'});
-        slideController.scrollTo({left: slideController.scrollLeft == 0 ? 250 : 0, behavior: 'smooth'});
-    });
-
-    colorSelect.addEventListener('change', (event) => {
-        
-        document.querySelector('.customColors.hidden').style.display = 'none';
-
-        switch(event.target.value) {
-            case "red":
-                window.themeColors.mainColor = "#ff2540";
-                window.themeColors.bgLeds = "#222222";
-                window.themeColors.whtie = "#ffffff";
-                break;
-            case "green":
-                window.themeColors.mainColor = "#65f06a";
-                window.themeColors.bgLeds = "#222222";
-                window.themeColors.whtie = "#ffffff";
-                break;
-            case "blue":
-                window.themeColors.mainColor = "#2087ff";
-                window.themeColors.bgLeds = "#222222";
-                window.themeColors.whtie = "#ffffff";
-                break;
-            case "custom":
-                document.querySelector('.customColors.hidden').style.display = 'block';
-                
-                primaryColor.value = window.themeColors.mainColor;
-                bgColor.value = window.themeColors.bgLeds;
-                whtie.value = window.themeColors.whtie;
-                break;
-            
+    constructor() {
+        if (Settings.#instance) {
+            return Settings.#instance;
         }
+        Settings.#instance = this;
 
-        setColors();
-    });
+        this.#settings = document.getElementById('settings');
+        this.#colorSelect = document.getElementById('colorSelect');
+        this.#primaryColor = document.getElementById('primaryColor');
+        this.#bgColor = document.getElementById('bgColor');
+        this.#white = document.getElementById('lighrColor');
 
-    primaryColor.addEventListener('change', (event) => {
-        window.themeColors.mainColor = event.target.value;
-        setColors();
-    });
+        this.#setupEventListeners();
+    }
 
-    bgColor.addEventListener('change', (event) => {
-        window.themeColors.bgLeds = event.target.value;
-        setColors();
-    });
+    #setupEventListeners() {
+        this.#settings.addEventListener('click', () => {
+            const slideController = document.querySelector('.slideController');
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+            slideController.scrollTo({ left: slideController.scrollLeft === 0 ? 250 : 0, behavior: 'smooth' });
+        });
 
-    whtie.addEventListener('change', (event) => {
-        window.themeColors.whtie = event.target.value;
-        setColors();
-    });
+        this.#colorSelect.addEventListener('change', (event) => {
+            document.querySelector('.customColors.hidden').style.display = 'none';
 
+            switch (event.target.value) {
+                case "red":
+                    window.themeColors.mainColor = "#ff2540";
+                    window.themeColors.bgLeds = "#222222";
+                    window.themeColors.white = "#ffffff";
+                    break;
+                case "green":
+                    window.themeColors.mainColor = "#65f06a";
+                    window.themeColors.bgLeds = "#222222";
+                    window.themeColors.white = "#ffffff";
+                    break;
+                case "blue":
+                    window.themeColors.mainColor = "#2087ff";
+                    window.themeColors.bgLeds = "#222222";
+                    window.themeColors.white = "#ffffff";
+                    break;
+                case "custom":
+                    document.querySelector('.customColors.hidden').style.display = 'block';
+
+                    this.#primaryColor.value = window.themeColors.mainColor;
+                    this.#bgColor.value = window.themeColors.bgLeds;
+                    this.#white.value = window.themeColors.white;
+                    break;
+            }
+
+            this.#setColors();
+        });
+
+        this.#primaryColor.addEventListener('change', (event) => {
+            window.themeColors.mainColor = event.target.value;
+            this.#setColors();
+        });
+
+        this.#bgColor.addEventListener('change', (event) => {
+            window.themeColors.bgLeds = event.target.value;
+            this.#setColors();
+        });
+
+        this.#white.addEventListener('change', (event) => {
+            window.themeColors.white = event.target.value;
+            this.#setColors();
+        });
+    }
+
+    #setColors() {
+        // Implementa la lógica para aplicar los colores al tema
+    }
 }
 
-function list() {
-    const listButton = document.getElementById("list");
-    const list = document.querySelector(".list ul");
-    const audio = document.querySelector('audio');
-    const segmentDisplay = document.querySelector('segment-display');
-    let items = [];
-    let lastCheck;
+class FileList {
+    static #instance = null;
+    #listButton;
+    #list;
+    #audio;
+    #segmentDisplay;
+    #items = [];
+    #lastCheck;
 
-    listButton.addEventListener("click", async () => {
-        window.scrollTo({
-            top: window.scrollY == 0 ? 370 : 0,
-            left: 0,
-            behavior: 'smooth'
-        });
-        await updateList();
-        drawItems();
-    });
+    constructor() {
+        if (FileList.#instance) {
+            return FileList.#instance;
+        }
+        FileList.#instance = this;
 
-    const updateList = async () => {
+        this.#listButton = document.getElementById("list");
+        this.#list = document.querySelector(".list ul");
+        this.#audio = document.querySelector("audio");
+        this.#segmentDisplay = document.querySelector("segment-display");
+
+        this.#setupEventListeners();
+    }
+
+    async updateList() {
         const now = new Date().getTime();
-        if (items.length == 0 || !lastCheck || lastCheck - now > 600000) {
-            items = await window.SFTP.listDirectory();        
-            items = items.filter(item => item.isDir || item.name.endsWith(".mp3"));
-            lastCheck = now;
+
+        if (this.#items.length === 0 || !this.#lastCheck || this.#lastCheck - now > 600000) {
+            this.#items = await window.SFTP.listDirectory();
+            this.#items = this.#items.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
+            this.#lastCheck = now;
         }
     }
 
-    const drawItems = () => {
+    async #drawItems() {
+        this.#list.innerHTML = '';
 
-        list.innerHTML = '';
-
-        items.forEach(item => {
+        this.#items.forEach(item => {
             const li = document.createElement('li');
             li.textContent = (item.isDir ? '/' : '') + item.name;
-            list.appendChild(li);
-    
+            this.#list.appendChild(li);
+
             li.addEventListener("click", async (event) => {
                 const fileName = event.target.textContent;
-
-                await window.SFTP.download(fileName);
-
-                attachToplayer(fileName);
+                try {
+                    await this.#attachToplayer(fileName);
+                } catch (err) {
+                    await window.SFTP.download(fileName);
+                    await this.#attachToplayer(fileName);
+                }
             });
         });
     }
 
-    const attachToplayer = (fileName) => {
-        window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => { 
-            audio.src = fileEntry.toNativeURL();
-            segmentDisplay.setAttribute('text', fileName);
-        }, (error) => {
-            console.error(error);
+    #setupEventListeners() {
+        this.#listButton.addEventListener("click", async () => {
+            window.scrollTo({
+                top: window.scrollY === 0 ? 370 : 0,
+                left: 0,
+                behavior: 'smooth'
+            });
+            await this.updateList();
+            this.#drawItems();
         });
     }
 
+    #attachToplayer(fileName) {
+        return new Promise((resolve, reject) => {
+            window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => {
+                this.#audio.src = fileEntry.toNativeURL();
+                this.#segmentDisplay.setAttribute('text', fileName);
+                SpeedControls.getInstance().play(true);
+                resolve();
+            }, (error) => {
+                console.error(error);
+                reject(error);
+            });
+        });
+    }
 }
 
-function speedControls() {
+class SpeedControls {
+    static #instance = null;
+    #audio;
+    #playButton;
+    #nextButton;
+    #prevButton;
+    #progressCanvas;
+    #velocidadActual = 1.0;
+    #tiempoUltimaAccion = 0;
+    #incremento = 1.0;
+    #velocidadMaxima = 5.0;
+    #umbralTiempo = 250;
+    #intervalo;
+    #velocidadRetroceso = -1.0;
 
-    const play = document.getElementById("play");
-    const audio = document.querySelector('audio');
-    const button = document.getElementById('next');
-    let velocidadActual = 1.0;
-    let tiempoUltimaAccion = 0;
-    const incremento = 1.0;
-    const velocidadMaxima = 5.0;
-    const umbralTiempo = 250;
-    let intervalo;
+    constructor() {
+        if (SpeedControls.#instance) {
+            return SpeedControls.#instance;
+        }
+        SpeedControls.#instance = this;
 
-    function playButton() {
-        audio.playbackRate = 1;
+        this.#audio = document.querySelector('audio');
+        this.#playButton = document.getElementById("play");
+        this.#nextButton = document.getElementById("next");
+        this.#prevButton = document.getElementById("prev");
+        this.#progressCanvas = document.getElementById("progressCanvas");
 
-        if (audio.paused) {
-            audio.play();
-            document.getElementById("play").innerHTML = '&#xe802;';
+        this.#setupEventListeners();
+    }
+
+    play(force) {
+        this.#audio.playbackRate = 1;
+        if (this.#audio.paused || force) {
+            this.#audio.play();
+            this.#playButton.innerHTML = "&#xe802;";
         } else {
-            audio.pause();
-            document.getElementById("play").innerHTML = '&#xe801;';
+            this.#audio.pause();
+            this.#playButton.innerHTML = "&#xe801;";
         }
     }
 
-    play.addEventListener("click", playButton);
-
-    function actualizarVelocidad() {
+    #actualizarVelocidad() {
         const ahora = Date.now();
-        const tiempoDesdeUltimaAccion = ahora - tiempoUltimaAccion;
-
-        velocidadActual = (tiempoDesdeUltimaAccion <= umbralTiempo) ? Math.min(velocidadActual + incremento, velocidadMaxima) : 2.0; // Reinicia a x2 en una nueva pulsación
-        audio.playbackRate = velocidadActual;
-        tiempoUltimaAccion = ahora;
+        const tiempoDesdeUltimaAccion = ahora - this.#tiempoUltimaAccion;
+        this.#velocidadActual = tiempoDesdeUltimaAccion <= this.#umbralTiempo
+            ? Math.min(this.#velocidadActual + this.#incremento, this.#velocidadMaxima)
+            : 2.0; // Reinicia a x2 en una nueva pulsación
+        this.#audio.playbackRate = this.#velocidadActual;
+        this.#tiempoUltimaAccion = ahora;
     }
 
-    function iniciarAceleracion() {
-
-        console.log('audio.playbackRate', audio.playbackRate)
-        console.log('tiempoUltimaAccion', tiempoUltimaAccion)
-
-        actualizarVelocidad();
-        audio.playbackRate = Math.min(audio.playbackRate + incremento, velocidadMaxima);
+    iniciarAceleracion() {
+        this.#actualizarVelocidad();
+        this.#audio.playbackRate = Math.min(this.#audio.playbackRate + this.#incremento, this.#velocidadMaxima);
     }
 
-    button.addEventListener('mousedown', () => {
-        console.log('mousedown');
-        iniciarAceleracion()
-    });
-    button.addEventListener('touchstart', () => {
-        console.log('touchstart');
-        iniciarAceleracion() 
-    },{ passive: true });
-
-    function detenerAceleracion() {
-        clearInterval(intervalo);
+    detenerAceleracion() {
+        clearInterval(this.#intervalo);
         setTimeout(() => {
-            if (Date.now() - tiempoUltimaAccion > umbralTiempo) {
-                audio.playbackRate = 1.0; // Restablece la velocidad normal
-                velocidadActual = 1.0;
+            if (Date.now() - this.#tiempoUltimaAccion > this.#umbralTiempo) {
+                this.#audio.playbackRate = 1.0;
+                this.#velocidadActual = 1.0;
             }
-        }, umbralTiempo);
+        }, this.#umbralTiempo);
     }
 
-    button.addEventListener('mouseup', () => {
-        console.log('mouseup');
-        detenerAceleracion()
-    });
-    button.addEventListener('mouseleave', () => {
-        console.log('mouseleave');
-        detenerAceleracion()
-    });
-    button.addEventListener('touchend', () => {
-        console.log('touchend');
-        detenerAceleracion()
-    });
-    button.addEventListener('touchcancel', () => {
-        console.log('touchcancel');
-        detenerAceleracion()
-    });
-
-    const buttonRetroceder = document.getElementById('prev');
-    let velocidadRetroceso = -1.0;
-
-    function actualizarRetroceso() {
-        const ahora = Date.now();
-        const tiempoDesdeUltimaAccion = ahora - tiempoUltimaAccion;
-
-        velocidadRetroceso = (tiempoDesdeUltimaAccion <= umbralTiempo) ? Math.max(velocidadRetroceso - decremento, velocidadMaxima) : -2.0; // Reinicia a x2 en una nueva pulsación
-        tiempoUltimaAccion = ahora;
+    iniciarRetroceso() {
+        this.#velocidadRetroceso = -2.0;
+        this.#intervalo = setInterval(() => {
+            this.#audio.currentTime = Math.max(this.#audio.currentTime + this.#velocidadRetroceso, 0);
+        }, this.#umbralTiempo);
     }
 
-    function iniciarRetroceso() {
-        actualizarRetroceso();
-        intervalo = setInterval(() => {
-            if (velocidadRetroceso > velocidadMaxima) {
-                velocidadRetroceso = Math.max(velocidadRetroceso - decremento, velocidadMaxima);
-            }
-            audio.currentTime = Math.max(audio.currentTime + velocidadRetroceso, 0); // Retrocede en tiempo
-        }, umbralTiempo);
-    }
-
-    buttonRetroceder.addEventListener('mousedown', () => { 
-        iniciarRetroceso() 
-    });
-    buttonRetroceder.addEventListener('touchstart', () => { 
-        iniciarRetroceso() 
-    },{ passive: true });
-
-    function detenerRetroceso() {
-        clearInterval(intervalo);
+    detenerRetroceso() {
+        clearInterval(this.#intervalo);
         setTimeout(() => {
-            if (Date.now() - tiempoUltimaAccion > umbralTiempo) {
-                velocidadRetroceso = -1.0; // Restablece la velocidad normal de retroceso
+            if (Date.now() - this.#tiempoUltimaAccion > this.#umbralTiempo) {
+                this.#velocidadRetroceso = -1.0;
             }
-        }, umbralTiempo);
+        }, this.#umbralTiempo);
     }
-    buttonRetroceder.addEventListener('mouseup', () => { 
-        detenerRetroceso() 
-    });
-    buttonRetroceder.addEventListener('mouseleave', () => { 
-        detenerRetroceso() 
-    });
-    buttonRetroceder.addEventListener('touchend', () => { 
-        detenerRetroceso() 
-    });
-    buttonRetroceder.addEventListener('touchcancel', () => { 
-        detenerRetroceso() 
-    });
 
+    #setupEventListeners() {
+        this.#playButton.addEventListener("click", () => this.play());
+        this.#nextButton.addEventListener("mousedown", () => this.iniciarAceleracion());
+        this.#nextButton.addEventListener("mouseup", () => this.detenerAceleracion());
+        this.#prevButton.addEventListener("mousedown", () => this.iniciarRetroceso());
+        this.#prevButton.addEventListener("mouseup", () => this.detenerRetroceso());
 
-    progressCanvas.addEventListener("click", function(event) {
-        const positionX = event.offsetX;
-        const total = progressCanvas.clientWidth;
-        const position = (positionX / total);
-
-        console.log({
-            duration: audio.duration,
-            position 
-        })
-
-        if (audio.readyState >= 2) { // Si el audio está cargado
-            audio.currentTime = 10;
-        } else {
-            audio.addEventListener("loadedmetadata", () => {
-                audio.currentTime = audio.duration * position
-            });
-        }
-    });
+        this.#progressCanvas.addEventListener("click", (event) => {
+            const positionX = event.offsetX;
+            const total = this.#progressCanvas.clientWidth;
+            const position = positionX / total;
+            if (this.#audio.readyState >= 2) {
+                this.#audio.currentTime = this.#audio.duration * position;
+            } else {
+                this.#audio.addEventListener("loadedmetadata", () => {
+                    this.#audio.currentTime = this.#audio.duration * position;
+                });
+            }
+        });
+    }
 }
