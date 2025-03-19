@@ -57,7 +57,6 @@
         margin-inline-end: 20px;
         line-height: 0;
         border-radius: 5px;
-        box-shadow: 0 0 1px 0px #d7f0ff;
         cursor: pointer;
         user-select: none;
     }
@@ -97,6 +96,7 @@
     }
     .slideController .settings {
         margin-inline-start: 5%;
+        position: relative;
     }
     .slideController .settings h4 {
         color: var(--main-color);
@@ -106,10 +106,25 @@
         display:  flex;
         justify-content: space-between;
         width: 215px;
-        margin-top: 1rem;
+        margin-bottom: 1rem;
     }
+
+    .settings .option input{
+        background: #222;
+        border: none;
+        padding: 0.3rem;
+        width: 100%;
+    }
+
     .settings .hidden {
         display: none;
+    }
+
+    .settings .form.themes,
+    .settings .form.ssh,
+    .settings .form.about {
+        position: absolute;
+        top: 55px;
     }
 
     @font-face {
@@ -130,6 +145,35 @@
       line-height: 1em;
     }
 
+    .settings .bg {
+        width: 190px;
+        height: 100%;
+        align-content: center;
+        transition: all 620ms;
+    }
+
+    #sshConfig,
+    .settings button.menu {
+        text-align: start;
+        width: 100%;
+        padding: 0.5rem 1rem;
+        margin: 0.1rem 0;
+        display: inline-block;
+        background: linear-gradient(90deg, #222 0%, #000 50%,#222 100%);
+        background-size: 200% 200%;
+        background-position: 0% 50%;
+        color: white;
+        border-radius: 3px;
+        border: none;
+        box-shadow: inset 0 0px 13px 0px #2121214a;
+        transition: background-position 1s, opacity 800ms;
+    }
+
+    .settings button.menu:hover {
+        background-position: 200% 50%;
+        color: var(--main-color);
+    }
+
 </style>
 <script type="module" src="js/index.js"></script>
 <body>
@@ -140,55 +184,65 @@
                 <classic-equalizer audio="audio"></classic-equalizer>         
             </div>
             <div class="settings">
-                <h4>Theme</h4>
 
-                <div class="option">
-                    <label for="colorSelect">Colors</label>
-                    <select id="colorSelect">
-                        <option value="red">Red</option>
-                        <option value="green">Green</option>
-                        <option value="blue">Blue</option>
-                        <option value="custom">custom</option>
-                    </select>
+                <div class="bg">
+                    <button class="menu theme">Thems</button>
+                    <button class="menu ssh">SSH</button>
+                    <button class="menu about">About</button>
                 </div>
 
-                <div class="customColors hidden">
+                <div class="form themes hidden">
                     <div class="option">
-                        <label for="colorSelect">Primary color</label>
-                        <input type="color" id="primaryColor"/>
+                        <label for="colorSelect">Colors</label>
+                        <select id="colorSelect">
+                            <option value="red">Red</option>
+                            <option value="green">Green</option>
+                            <option value="blue">Blue</option>
+                            <option value="custom">custom</option>
+                        </select>
                     </div>
-                    <div class="option">
-                        <label for="colorSelect">BG Color</label>
-                        <input type="color" id="bgColor"/>
-                    </div>
-                    <div class="option">
-                        <label for="colorSelect">Light Color</label>
-                        <input type="color" id="lighrColor"/>
+    
+                    <div class="customColors hidden">
+                        <div class="option">
+                            <label for="colorSelect">Primary color</label>
+                            <input type="color" id="primaryColor"/>
+                        </div>
+                        <div class="option">
+                            <label for="colorSelect">BG Color</label>
+                            <input type="color" id="bgColor"/>
+                        </div>
+                        <div class="option">
+                            <label for="colorSelect">Light Color</label>
+                            <input type="color" id="lighrColor"/>
+                        </div>
                     </div>
                 </div>
 
-                <h4>Ssh</h4>
-                <div class="option">
-                    <label for="colorSelect">Url</label>
-                    <input type="text" id="url"/>
+                <div class="form ssh hidden">
+                    <div class="option">
+                        <input placeholder="Url" ="text" id="url"/>
+                    </div>
+                    <div class="option">
+                        <input placeholder="Port" type="text" id="port"/>
+                    </div>
+                    <div class="option">
+                        <input placeholder="Username" type="text" id="username"/>
+                    </div>
+                    <div class="option">
+                        <input placeholder="Password" type="password" id="password"/>
+                    </div>
+                    <div class="option">
+                        <input placeholder="Path" type="text" id="path"/>
+                    </div>
+                    <button id="sshConfig">Save</button>
                 </div>
-                <div class="option">
-                    <label for="colorSelect">Port</label>
-                    <input type="text" id="port"/>
+
+                <div class="form about hidden">
+                    <span>version: 0.9.0</span>
+                    <span>ChTosar</span>
+                    <span>2025</span>
                 </div>
-                <div class="option">
-                    <label for="colorSelect">User</label>
-                    <input type="text" id="username"/>
-                </div>
-                <div class="option">
-                    <label for="colorSelect">Password</label>
-                    <input type="password" id="password"/>
-                </div>
-                <div class="option">
-                    <label for="colorSelect">Path</label>
-                    <input type="text" id="path"/>
-                </div>
-                <button id="sshConfig">set config</button>
+
             </div>
         </div>
 

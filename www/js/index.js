@@ -176,6 +176,34 @@ class Settings {
             window.themeColors.white = event.target.value;
             this.#setColors();
         });
+
+        document.querySelector('.settings .menu.theme').addEventListener('click', (event) => {
+            setTimeout(() => {
+                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + 54px))";
+                document.querySelector('.form.themes').style.display = "block";
+            }, 400);
+
+            document.querySelector('.settings .menu.ssh').style.opacity = 0;
+            document.querySelector('.settings .menu.about').style.opacity = 0;
+        });
+
+        document.querySelector('.settings .menu.ssh').addEventListener('click', (event) => {
+            setTimeout(() => {
+                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + 21px))";
+                document.querySelector('.form.ssh').style.display = "block";
+            }, 400);
+            document.querySelector('.settings .menu.theme').style.opacity = 0;
+            document.querySelector('.settings .menu.about').style.opacity = 0;
+        });
+
+        document.querySelector('.settings .menu.about').addEventListener('click', (event) => {
+            setTimeout(() => {
+                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + -14px))";
+                document.querySelector('.form.about').style.display = "block";
+            }, 400);
+            document.querySelector('.settings .menu.theme').style.opacity = 0;
+            document.querySelector('.settings .menu.ssh').style.opacity = 0;
+        });
     }
 
     #setColors() {
@@ -366,3 +394,22 @@ class SpeedControls {
         });
     }
 }
+
+function generateGradientAnimation() {
+    let keyframes = "@keyframes gradientAnimation {\n";
+    
+    for (let i = 0; i <= 100; i++) {
+        keyframes += `${i}% {
+        background: linear-gradient(90deg, rgba(10,10,10,1) 0%, rgba(42,42,42,0.5) ${i}%, rgba(0,0,0,1) 100%);
+    }\n`;
+    }
+    
+    keyframes += "}";
+    
+    // Crear una etiqueta de estilo y agregarla al documento
+    const styleSheet = document.createElement("style");
+    styleSheet.innerHTML = keyframes;
+    document.head.appendChild(styleSheet);
+}
+
+generateGradientAnimation();

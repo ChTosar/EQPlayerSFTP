@@ -1,12 +1,13 @@
 export class SFTP {
-    constructor() {
-        this.host;
-        this.username;
-        this.path;
-        this.port;
-        this.password;
-        this.client;
 
+    host;
+    username;
+    path;
+    port;
+    #password;
+    client;
+
+    constructor() {
         this.loadConfig();
     }
 
@@ -20,7 +21,7 @@ export class SFTP {
             this.username = sshConfig.username;
             this.path = sshConfig.path;
             this.port = sshConfig.port;
-            this.password = sshConfig.password;
+            this.#password = sshConfig.password;
 
             this.connect();
         } else {
@@ -41,7 +42,7 @@ export class SFTP {
         try {
             this.client = await OurCodeWorldSFTP.createSFTPClient();
             
-            this.client.setCredentials(this.host, this.username, this.password, this.port);
+            this.client.setCredentials(this.host, this.username, this.#password, this.port);
             this.client.setPath(this.path);
 
             console.log("Conectado al servidor SFTP");
@@ -88,7 +89,7 @@ export class SFTP {
                     if(download.finished == true){
                         resolve(download);
                     }else{
-                        console.log("Progress download : "+download.progress+"%. "+ download.bytesprogress +" bytes downloaded of " + download.filesizebytes + "total");
+                        console.log(`Progress download: ${download.progress}% of ${download.filesizebytes} total`);
                     }
                 },
                 error:function(er){
