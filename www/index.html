@@ -111,6 +111,7 @@
 
     .settings .option input{
         background: #222;
+        color: white;
         border: none;
         padding: 0.3rem;
         width: 100%;
@@ -123,10 +124,13 @@
     .settings .form.theme,
     .settings .form.ssh,
     .settings .form.about {
+        animation: fadeIn 1.2s ease-in-out forwards;
         position: absolute;
         top: 35px;
         padding-top: 1rem;
         z-index: 10;
+        overflow: scroll;
+        max-height: calc(100% - 50px);
     }
 
     @font-face {
@@ -174,6 +178,37 @@
     .settings button.menu:hover {
         background-position: 200% 50%;
         color: var(--main-color);
+    }
+
+    @keyframes fadeIn {
+        0% { opacity: 0; }
+        20% { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    .customColors input[type="color"] {
+        width: 80px;
+        border-radius: 3px;
+    }
+
+    #colorSelect {
+        background: #222;
+        color: white;
+        border: none;
+        padding: 0.2rem;
+        border-radius: 2px;
+    }
+
+    .form.about span {
+        display: block;
+        width: 190px;
+        text-align: center;
+        margin: 0.4rem;
+        color: #333;
+    }
+
+    .form.about a {
+        color: white;
     }
 
 </style>
@@ -240,8 +275,8 @@
                 </div>
 
                 <div class="form about hidden">
-                    <span>version: 0.9.0</span>
-                    <span>ChTosar</span>
+                    <span>Version: 0.9.0</span>
+                    <span>Created by: <a href="https://github.com/ChTosar" target="_blank">ChTosar</a></span>
                     <span>2025</span>
                 </div>
 

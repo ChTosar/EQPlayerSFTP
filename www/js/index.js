@@ -32,8 +32,6 @@ window.onload = () => {
     window.themeColors.mainColor = '#ff2540';
     window.themeColors.bgLeds = '#222222';
 
-    setColors();
-
     function drawProgress() {
         const ctx = progressCanvas.getContext("2d");
         const totalPixels = Math.floor(progressCanvas.width / (pixelSize + margin));
@@ -59,46 +57,28 @@ window.onload = () => {
     window.speedControls = new SpeedControls();
     window.fileList = new FileList();
     window.settings = new Settings();
-    sftp();
+    window.settings.setColors();
     window.SFTP = new SFTP();
+    sftpConfig();
 };
 
-function sftp() {
+function sftpConfig() {
+
+    document.getElementById('url').value = window.SFTP.url;
+    document.getElementById('port').value = window.SFTP.port;
+    document.getElementById('username').value = window.SFTP.username;
+    document.getElementById('path').value = window.SFTP.path;
 
     document.getElementById('sshConfig').addEventListener('click', () => {
 
-        const host = document.getElementById('url').value;
-        const port = document.getElementById('port').value;
-        const username = document.getElementById('username').value;
-        const password = document.getElementById('password').value;
-        const path = document.getElementById('path').value;
-
-        window.SFTP.setConfig(host, port, username, password, path);
+        window.SFTP.setConfig(
+            document.getElementById('url').value, 
+            document.getElementById('port').value, 
+            document.getElementById('username').value, 
+            document.getElementById('password').value, 
+            document.getElementById('path').value
+        );
     });
-}
-
-function setColors() {
-
-    const segmentDisplay = document.querySelector('segment-display');
-    const equalizer = document.querySelector('classic-equalizer');
-    const audio = document.querySelector('audio');
-
-    equalizer.setAttribute('colors', JSON.stringify({
-        barBgColor: window.themeColors.bgLeds,
-        barColor: window.themeColors.whtie,
-        barColor2: window.themeColors.bgLeds,
-        barColor3: window.themeColors.mainColor
-    }));
-
-    segmentDisplay.segment.FillLight = window.themeColors.mainColor;
-    segmentDisplay.segment.FillDark = window.themeColors.bgLeds;
-    segmentDisplay.segment.colorDark = window.themeColors.mainColor;
-    segmentDisplay.segment.colorLight = window.themeColors.mainColor;
-    segmentDisplay.segment.strokeLight = window.themeColors.mainColor;
-    segmentDisplay.segment.strokeDark = window.themeColors.mainColor;
-
-    document.querySelector('body').style.setProperty('--main-color', window.themeColors.mainColor);
-    segmentDisplay.setAttribute('text', audio.getAttribute('src'));
 }
 
 class Settings {
@@ -129,6 +109,7 @@ class Settings {
             const slideController = document.querySelector('.slideController');
             window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
             slideController.scrollTo({ left: slideController.scrollLeft === 0 ? 250 : 0, behavior: 'smooth' });
+            this.resetMenu();
         });
 
         this.#colorSelect.addEventListener('change', (event) => {
@@ -159,22 +140,22 @@ class Settings {
                     break;
             }
 
-            this.#setColors();
+            this.setColors();
         });
 
         this.#primaryColor.addEventListener('change', (event) => {
             window.themeColors.mainColor = event.target.value;
-            this.#setColors();
+            this.setColors();
         });
 
         this.#bgColor.addEventListener('change', (event) => {
             window.themeColors.bgLeds = event.target.value;
-            this.#setColors();
+            this.setColors();
         });
 
         this.#white.addEventListener('change', (event) => {
             window.themeColors.white = event.target.value;
-            this.#setColors();
+            this.setColors();
         });
 
         const menus = [{name:"theme", position:"54"}, {name:"ssh", position:"21"}, {name:"about", position:"-14"}];
@@ -192,19 +173,44 @@ class Settings {
                         document.querySelector(`.settings .menu.${menu.name}`).style.opacity = 0;
                     });
                 } else {
-                    document.querySelector('.settings .bg').style.transform = '';
-                    document.querySelector(`.form.${menu.name}`).style.display = '';
-                    othersMenus.forEach(menu => {
-                        document.querySelector(`.settings .menu.${menu.name}`).style.opacity = '';
-                    });
+                    this.resetMenu();
                 }
             });
         });
-
     }
 
-    #setColors() {
-        // Implementa la lógica para aplicar los colores al tema
+    resetMenu() {
+        document.querySelector('.settings .bg').style.transform = '';
+
+        document.querySelectorAll(`.form`).forEach((element) => {
+            element.style.display = '';
+        });
+        document.querySelectorAll(`.settings .menu`).forEach((element) => {
+            element.style.opacity = '';
+        });
+    }
+
+    setColors() {
+        const segmentDisplay = document.querySelector('segment-display');
+        const equalizer = document.querySelector('classic-equalizer');
+        const audio = document.querySelector('audio');
+    
+        equalizer.setAttribute('colors', JSON.stringify({
+            barBgColor: window.themeColors.bgLeds,
+            barColor: window.themeColors.whtie,
+            barColor2: window.themeColors.bgLeds,
+            barColor3: window.themeColors.mainColor
+        }));
+    
+        segmentDisplay.segment.FillLight = window.themeColors.mainColor;
+        segmentDisplay.segment.FillDark = window.themeColors.bgLeds;
+        segmentDisplay.segment.colorDark = window.themeColors.mainColor;
+        segmentDisplay.segment.colorLight = window.themeColors.mainColor;
+        segmentDisplay.segment.strokeLight = window.themeColors.mainColor;
+        segmentDisplay.segment.strokeDark = window.themeColors.mainColor;
+    
+        document.querySelector('body').style.setProperty('--main-color', window.themeColors.mainColor);
+        segmentDisplay.setAttribute('text', audio.getAttribute('src'));
     }
 }
 
