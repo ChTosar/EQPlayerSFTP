@@ -177,33 +177,30 @@ class Settings {
             this.#setColors();
         });
 
-        document.querySelector('.settings .menu.theme').addEventListener('click', (event) => {
-            setTimeout(() => {
-                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + 54px))";
-                document.querySelector('.form.themes').style.display = "block";
-            }, 400);
+        const menus = [{name:"theme", position:"54"}, {name:"ssh", position:"21"}, {name:"about", position:"-14"}];
 
-            document.querySelector('.settings .menu.ssh').style.opacity = 0;
-            document.querySelector('.settings .menu.about').style.opacity = 0;
+        menus.forEach(menu => {
+            const othersMenus = menus.filter(item => item.name !== menu.name);
+            document.querySelector(`.settings .menu.${menu.name}`).addEventListener('click', () => {
+
+                if (document.querySelector('.settings .bg').style.transform === '') {
+                    setTimeout(() => {
+                        document.querySelector('.settings .bg').style.transform = `translateY(calc(-50% + ${menu.position}px))`;
+                        document.querySelector(`.form.${menu.name}`).style.display = "block";
+                    }, 400);
+                    othersMenus.forEach(menu => {
+                        document.querySelector(`.settings .menu.${menu.name}`).style.opacity = 0;
+                    });
+                } else {
+                    document.querySelector('.settings .bg').style.transform = '';
+                    document.querySelector(`.form.${menu.name}`).style.display = '';
+                    othersMenus.forEach(menu => {
+                        document.querySelector(`.settings .menu.${menu.name}`).style.opacity = '';
+                    });
+                }
+            });
         });
 
-        document.querySelector('.settings .menu.ssh').addEventListener('click', (event) => {
-            setTimeout(() => {
-                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + 21px))";
-                document.querySelector('.form.ssh').style.display = "block";
-            }, 400);
-            document.querySelector('.settings .menu.theme').style.opacity = 0;
-            document.querySelector('.settings .menu.about').style.opacity = 0;
-        });
-
-        document.querySelector('.settings .menu.about').addEventListener('click', (event) => {
-            setTimeout(() => {
-                document.querySelector('.settings .bg').style.transform = "translateY(calc(-50% + -14px))";
-                document.querySelector('.form.about').style.display = "block";
-            }, 400);
-            document.querySelector('.settings .menu.theme').style.opacity = 0;
-            document.querySelector('.settings .menu.ssh').style.opacity = 0;
-        });
     }
 
     #setColors() {

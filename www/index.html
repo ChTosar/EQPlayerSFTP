@@ -120,11 +120,13 @@
         display: none;
     }
 
-    .settings .form.themes,
+    .settings .form.theme,
     .settings .form.ssh,
     .settings .form.about {
         position: absolute;
-        top: 55px;
+        top: 35px;
+        padding-top: 1rem;
+        z-index: 10;
     }
 
     @font-face {
@@ -191,7 +193,7 @@
                     <button class="menu about">About</button>
                 </div>
 
-                <div class="form themes hidden">
+                <div class="form theme hidden">
                     <div class="option">
                         <label for="colorSelect">Colors</label>
                         <select id="colorSelect">
