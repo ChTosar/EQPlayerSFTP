@@ -70,19 +70,57 @@
         padding: 1rem 0 ;
     }
 
+    container.list {
+        align-content: start;
+    }
+
     .list ul {
+        margin: 0;
         display: inline-block;
         width: 100%;
         list-style-type: none;
         padding: 0;
+        height: calc(100% - 200px);
+        overflow: scroll;
+        border: 1px solid #222;
+    }
+
+    .list button {
+        font-size: 1rem;
+        border: 1px solid #222;
+        padding: 0.5rem 1rem;
+        border-radius: 3px 3px 0 0;
+        margin-bottom: -1px;
+        color: white;
+        background: linear-gradient(180deg, #222 0%, #000 100%);
     }
 
     .list li {
         border-radius: 1px;
         padding: 5px;
-        background: #ffffff30;
-        border: 0.5px solid #000000;
+        background: black;
+        border: 0.5px solid #222;
+        justify-content: space-between;
+        display: flex;
     }
+
+    .list button.selected {
+        color: var(--main-color);
+    }
+
+    .list ul:not(.selected) {
+        display: none;
+    }
+
+    .list li .badge {
+        display: inline-block;
+        background: orange;
+        padding: 0.4rem;
+        border-radius: 20px;
+        color: black;
+        line-height: 0.5;
+    }
+
     .slideController {
         width: 200%;
         overflow: hidden;
@@ -153,6 +191,8 @@
 
     .settings .bg {
         width: 190px;
+        display: flex;
+        flex-wrap: wrap;
         height: 100%;
         align-content: center;
         transition: all 620ms;
@@ -300,7 +340,12 @@
 
     </container>
     <container class="list">
-        <ul></ul>
+        <div>
+            <button class="localButton selected">Local</button>
+            <button class="remoteButton">SSH</button>
+        </div>
+        <ul class="localList selected"></ul>
+        <ul class="remoteList"></ul>
     </container>
     <audio src=""></audio>
 </body>

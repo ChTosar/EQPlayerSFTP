@@ -27,11 +27,6 @@ window.onload = () => {
     equalizer.setAttribute('height', 280);
     equalizer.setAttribute('rows', 26);
 
-    window.themeColors = {};
-    window.themeColors.whtie = '#d7f0ff';
-    window.themeColors.mainColor = '#ff2540';
-    window.themeColors.bgLeds = '#222222';
-
     function drawProgress() {
         const ctx = progressCanvas.getContext("2d");
         const totalPixels = Math.floor(progressCanvas.width / (pixelSize + margin));
@@ -53,12 +48,11 @@ window.onload = () => {
         requestAnimationFrame(drawProgress);
     }
 
-    drawProgress();
     window.speedControls = new SpeedControls();
     window.fileList = new FileList();
     window.settings = new Settings();
-    window.settings.setColors();
     window.SFTP = new SFTP();
+    drawProgress();
     sftpConfig();
 };
 
@@ -101,6 +95,8 @@ class Settings {
         this.#bgColor = document.getElementById('bgColor');
         this.#white = document.getElementById('lighrColor');
 
+        this.getColors();
+        this.setColors();
         this.#setupEventListeners();
     }
 
@@ -139,7 +135,7 @@ class Settings {
                     this.#white.value = window.themeColors.white;
                     break;
             }
-
+            this.saveColors();
             this.setColors();
         });
 
@@ -194,7 +190,6 @@ class Settings {
         const segmentDisplay = document.querySelector('segment-display');
         const equalizer = document.querySelector('classic-equalizer');
         const audio = document.querySelector('audio');
-    
         equalizer.setAttribute('colors', JSON.stringify({
             barBgColor: window.themeColors.bgLeds,
             barColor: window.themeColors.whtie,
@@ -212,15 +207,34 @@ class Settings {
         document.querySelector('body').style.setProperty('--main-color', window.themeColors.mainColor);
         segmentDisplay.setAttribute('text', audio.getAttribute('src'));
     }
+
+    saveColors() {
+        localStorage.setItem('themeColors', JSON.stringify(window.themeColors));
+    }
+
+    getColors() {
+        const themeColors = localStorage.getItem('themeColors');
+
+        if (themeColors) {
+            window.themeColors = JSON.parse(themeColors);
+        } else {
+            window.themeColors = {};
+            window.themeColors.whtie = '#d7f0ff';
+            window.themeColors.mainColor = '#ff2540';
+            window.themeColors.bgLeds = '#222222';
+        }
+    }
 }
 
 class FileList {
     static #instance = null;
     #listButton;
-    #list;
+    #remoteList;
+    #localList;
     #audio;
     #segmentDisplay;
     #items = [];
+    #localItems = [];
     #lastCheck;
 
     constructor() {
@@ -230,7 +244,8 @@ class FileList {
         FileList.#instance = this;
 
         this.#listButton = document.getElementById("list");
-        this.#list = document.querySelector(".list ul");
+        this.#remoteList = document.querySelector(".list ul.remoteList");
+        this.#localList = document.querySelector(".list ul.localList");
         this.#audio = document.querySelector("audio");
         this.#segmentDisplay = document.querySelector("segment-display");
 
@@ -247,16 +262,86 @@ class FileList {
         }
     }
 
+    async localList() {
+        return new Promise((resolve, reject) => {
+            window.resolveLocalFileSystemURL(cordova.file.dataDirectory, (fileSystem) => {        
+                let reader = fileSystem.createReader();
+                reader.readEntries((entries) => {
+                    console.log(entries);
+                    this.#localItems = entries.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
+                    resolve(this.#localItems);
+                  },
+                  (err) => {
+                    console.log(err);
+                    reject(err);
+                  }
+                );
+            
+            }, (error) => {
+                console.error(error);
+            });
+        });
+    }
+
+    async #drawLocalItems() {
+        this.#localList.innerHTML = '';
+
+        console.log('localItems : ', this.#localItems);
+
+        this.#localItems.forEach(item => {
+            const li = document.createElement('li');
+
+            if (item.isDir) {
+                li.innerText = `/${item.name}`
+            } else {
+                const nameDivided = item.name.split('.');
+                const extension = nameDivided.pop();
+                li.file = {
+                    filepath: item.filepath,
+                    name: item.name
+                };
+                li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
+            }
+
+            console.log({li});
+
+            this.#localList.appendChild(li);
+
+            li.addEventListener("click", async (event) => {
+                const fileName = event.target.file.name;
+                try {
+                    await this.#attachToplayer(fileName);
+                } catch (err) {
+                    await window.SFTP.download(fileName);
+                    await this.#attachToplayer(fileName);
+                }
+            });
+        });
+
+    }
+
     async #drawItems() {
-        this.#list.innerHTML = '';
+        this.#remoteList.innerHTML = '';
 
         this.#items.forEach(item => {
             const li = document.createElement('li');
-            li.textContent = (item.isDir ? '/' : '') + item.name;
-            this.#list.appendChild(li);
+
+            if (item.isDir) {
+                li.innerText = `/${item.name}`
+            } else {
+                const nameDivided = item.name.split('.');
+                const extension = nameDivided.pop();
+                li.file = {
+                    filepath: item.filepath,
+                    name: item.name
+                };
+                li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
+            }
+
+            this.#remoteList.appendChild(li);
 
             li.addEventListener("click", async (event) => {
-                const fileName = event.target.textContent;
+                const fileName = event.target.file.name;
                 try {
                     await this.#attachToplayer(fileName);
                 } catch (err) {
@@ -267,7 +352,29 @@ class FileList {
         });
     }
 
-    #setupEventListeners() {
+    async #setupEventListeners() {
+
+        const localButton = document.querySelector(".localButton");
+        const remoteButton = document.querySelector(".remoteButton");
+        const localList = document.querySelector(".localList");
+        const remoteList = document.querySelector(".remoteList");
+
+        localButton.addEventListener("click", () => {
+            localButton.classList.add("selected");
+            localList.classList.add("selected");
+
+            remoteButton.classList.remove("selected");
+            remoteList.classList.remove("selected");
+        });
+
+        remoteButton.addEventListener("click", () => {
+            remoteButton.classList.add("selected");
+            remoteList.classList.add("selected");
+
+            localButton.classList.remove("selected");
+            localList.classList.remove("selected");
+        });
+
         this.#listButton.addEventListener("click", async () => {
             window.scrollTo({
                 top: window.scrollY === 0 ? 370 : 0,
@@ -275,6 +382,8 @@ class FileList {
                 behavior: 'smooth'
             });
             await this.updateList();
+            await this.localList();
+            this.#drawLocalItems();
             this.#drawItems();
         });
     }
@@ -284,7 +393,7 @@ class FileList {
             window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => {
                 this.#audio.src = fileEntry.toNativeURL();
                 this.#segmentDisplay.setAttribute('text', fileName);
-                SpeedControls.getInstance().play(true);
+                window.speedControls.play(true);
                 resolve();
             }, (error) => {
                 console.error(error);
@@ -340,7 +449,7 @@ class SpeedControls {
         const tiempoDesdeUltimaAccion = ahora - this.#tiempoUltimaAccion;
         this.#velocidadActual = tiempoDesdeUltimaAccion <= this.#umbralTiempo
             ? Math.min(this.#velocidadActual + this.#incremento, this.#velocidadMaxima)
-            : 2.0; // Reinicia a x2 en una nueva pulsación
+            : 2.0;
         this.#audio.playbackRate = this.#velocidadActual;
         this.#tiempoUltimaAccion = ahora;
     }
@@ -397,22 +506,3 @@ class SpeedControls {
         });
     }
 }
-
-function generateGradientAnimation() {
-    let keyframes = "@keyframes gradientAnimation {\n";
-    
-    for (let i = 0; i <= 100; i++) {
-        keyframes += `${i}% {
-        background: linear-gradient(90deg, rgba(10,10,10,1) 0%, rgba(42,42,42,0.5) ${i}%, rgba(0,0,0,1) 100%);
-    }\n`;
-    }
-    
-    keyframes += "}";
-    
-    // Crear una etiqueta de estilo y agregarla al documento
-    const styleSheet = document.createElement("style");
-    styleSheet.innerHTML = keyframes;
-    document.head.appendChild(styleSheet);
-}
-
-generateGradientAnimation();
