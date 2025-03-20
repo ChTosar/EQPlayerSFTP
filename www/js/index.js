@@ -54,11 +54,15 @@ window.onload = () => {
     window.SFTP = new SFTP();
     drawProgress();
     sftpConfig();
+
+    setTimeout(() => {
+        window.scrollTo({top:0});
+    }, 0);
 };
 
 function sftpConfig() {
 
-    document.getElementById('url').value = window.SFTP.url;
+    document.getElementById('url').value = window.SFTP.host;
     document.getElementById('port').value = window.SFTP.port;
     document.getElementById('username').value = window.SFTP.username;
     document.getElementById('path').value = window.SFTP.path;
@@ -267,7 +271,6 @@ class FileList {
             window.resolveLocalFileSystemURL(cordova.file.dataDirectory, (fileSystem) => {        
                 let reader = fileSystem.createReader();
                 reader.readEntries((entries) => {
-                    console.log(entries);
                     this.#localItems = entries.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
                     resolve(this.#localItems);
                   },
@@ -286,8 +289,6 @@ class FileList {
     async #drawLocalItems() {
         this.#localList.innerHTML = '';
 
-        console.log('localItems : ', this.#localItems);
-
         this.#localItems.forEach(item => {
             const li = document.createElement('li');
 
@@ -302,8 +303,6 @@ class FileList {
                 };
                 li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
             }
-
-            console.log({li});
 
             this.#localList.appendChild(li);
 
@@ -376,8 +375,9 @@ class FileList {
         });
 
         this.#listButton.addEventListener("click", async () => {
+            const progressCanvas = document.getElementById("progressCanvas");
             window.scrollTo({
-                top: window.scrollY === 0 ? 370 : 0,
+                top: window.scrollY === 0 ? progressCanvas.offsetTop : 0,
                 left: 0,
                 behavior: 'smooth'
             });
