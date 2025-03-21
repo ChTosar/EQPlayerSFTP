@@ -16,15 +16,12 @@ window.onload = () => {
 
     segmentDisplay.segment.SegmentWidth = 0.07;
     segmentDisplay.segment.BevelWidth = 0.9;
-
     segmentDisplay.segment.BevelWidth = 0.9;
-
     segmentDisplay.segment.Padding = 3;
-
     segmentDisplay.segment.SegmentInterval = 0.05;
     segmentDisplay.segment.SideBevelEnabled = false;
 
-    equalizer.setAttribute('height', 280);
+    equalizer.setAttribute('height', (screen.height*280)/480);
     equalizer.setAttribute('rows', 26);
 
     function drawProgress() {
