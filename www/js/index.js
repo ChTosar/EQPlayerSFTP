@@ -449,9 +449,16 @@ class FileList {
                 left: 0,
                 behavior: 'smooth'
             });
-            await this.localList();
-            this.#drawLocalItems();
-            this.#drawItems();
+
+            if (window.scrollY === 0) {
+                await this.localList();
+                this.#drawLocalItems();
+                this.#drawItems();
+                this.#listButton.style.transform="rotate(180deg)";
+            } else {
+                this.#listButton.style.transform="";
+            }
+
         });
     }
 
