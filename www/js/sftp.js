@@ -7,6 +7,7 @@ export class SFTP {
     port;
     #password;
     client;
+    status = 'None';
 
     constructor() {
         this.loadConfig();
@@ -50,8 +51,11 @@ export class SFTP {
             this.client.setCredentials(this.host, this.username, this.#password, this.port);
             this.client.setPath(this.path);
 
+            await this.listDirectory();
+            this.status = 'Succes' 
             console.log("Conectado al servidor SFTP");
         } catch (error) {
+            this.status = 'Error' 
             console.error("Error al conectar con SFTP:", error);
         }
     }

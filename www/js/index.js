@@ -67,7 +67,7 @@ function sftpConfig() {
     }
 
     document.getElementById('sshConfig').addEventListener('click', () => {
-
+        
         window.SFTP.setConfig(
             document.getElementById('url').value, 
             document.getElementById('port').value, 
@@ -75,6 +75,21 @@ function sftpConfig() {
             document.getElementById('password').value, 
             document.getElementById('path').value
         );
+        
+        setTimeout(() => {
+            const segmentDisplay = document.querySelector('segment-display');
+
+            const prevText = segmentDisplay.getAttribute('text');
+            if (window.SFTP.status == 'Succes') {
+                document.getElementById('settings').click();
+                segmentDisplay.setAttribute('text', 'SSH SUCCES');
+            } else {
+                segmentDisplay.setAttribute('text', 'Conection ERROR');
+            }
+            setTimeout(() => {
+                segmentDisplay.setAttribute('text', prevText);
+            }, 3000);
+        }, 800);
     });
 }
 
