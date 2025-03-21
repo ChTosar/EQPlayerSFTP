@@ -185,10 +185,10 @@ class Settings {
 
         this.#statusbar.addEventListener('click', (event) => {
             if(event.target.checked) {
-                StatusBar.hide();
+                StatusBar.show();
                 window.config.statusBar = true;
             } else {
-                StatusBar.show();
+                StatusBar.hide();
                 window.config.statusBar = false;
             }
             this.saveConfig();
@@ -253,7 +253,7 @@ class Settings {
         const config = localStorage.getItem('config');
 
         if (config) {
-            window.config = JSON.parse(themeColors);
+            window.config = JSON.parse(config);
         } else {
             window.config = {};
             window.config.statusBar = true;
@@ -309,7 +309,7 @@ class FileList {
     async updateList() {
         const now = new Date().getTime();
 
-        if (this.#items.length === 0 || !this.#lastCheck || this.#lastCheck - now > 600000) {
+        if (!this.#lastCheck || this.#lastCheck - now > 600000) {
             this.#items = await window.SFTP.listDirectory();
             this.#items = this.#items.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
             this.#lastCheck = now;
@@ -408,20 +408,26 @@ class FileList {
         const localList = document.querySelector(".localList");
         const remoteList = document.querySelector(".remoteList");
 
-        localButton.addEventListener("click", () => {
+        localButton.addEventListener("click", async () => {
             localButton.classList.add("selected");
             localList.classList.add("selected");
 
             remoteButton.classList.remove("selected");
             remoteList.classList.remove("selected");
+
+            await this.localList();
+            this.#drawItems();
         });
 
-        remoteButton.addEventListener("click", () => {
+        remoteButton.addEventListener("click", async () => {
             remoteButton.classList.add("selected");
             remoteList.classList.add("selected");
 
             localButton.classList.remove("selected");
             localList.classList.remove("selected");
+            
+            await this.updateList();
+            this.#drawItems();
         });
 
         this.#listButton.addEventListener("click", async () => {
@@ -431,7 +437,6 @@ class FileList {
                 left: 0,
                 behavior: 'smooth'
             });
-            await this.updateList();
             await this.localList();
             this.#drawLocalItems();
             this.#drawItems();
