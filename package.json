@@ -21,6 +21,7 @@
     "babel-loader": "^10.0.0",
     "cordova-android": "^13.0.0",
     "cordova-ourcodeworld-sftpplugin": "github:sdkcarlos/cordova-ourcodeworld-sftpplugin",
+    "cordova-plugin-device": "^3.0.0",
     "cordova-plugin-file": "^8.1.3",
     "cordova-plugin-statusbar": "^4.0.0",
     "cordova-sftp-plugin": "^2.0.1",
@@ -36,11 +37,13 @@
       "cordova-plugin-file": {
         "ANDROIDX_WEBKIT_VERSION": "1.4.0"
       },
-      "cordova-plugin-statusbar": {}
+      "cordova-plugin-statusbar": {},
+      "cordova-plugin-device": {}
     }
   },
   "dependencies": {
     "classic-equalizer": "file:../../../classicEqualizer",
+    "crypto-js": "^4.2.0",
     "segment-display": "file:../../sixteensegment"
   }
 }

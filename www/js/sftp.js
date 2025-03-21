@@ -1,3 +1,4 @@
+import CryptoJS from "crypto-js";
 export class SFTP {
 
     host;
@@ -13,7 +14,9 @@ export class SFTP {
 
     loadConfig() {
 
-        let sshConfig = window.localStorage.getItem('sshConfig');
+        var sshConfig = window.localStorage.getItem('sshConfig');
+
+        sshConfig = CryptoJS.AES.decrypt(sshConfig, device.uuid).toString(CryptoJS.enc.Utf8);
 
         if (sshConfig) {
             sshConfig = JSON.parse(sshConfig);
@@ -31,9 +34,11 @@ export class SFTP {
 
     setConfig(host, port, username, password, path) {
 
-        window.localStorage.setItem('sshConfig', JSON.stringify({
+        const sshConfig = CryptoJS.AES.encrypt(JSON.stringify({
             host, port, username, path, password
-        }));
+        }), device.uuid).toString();
+
+        window.localStorage.setItem('sshConfig', sshConfig);
 
         this.loadConfig();
     }
