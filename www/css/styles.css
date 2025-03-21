@@ -143,7 +143,9 @@ container.list {
     padding: 0.3rem;
     width: 100%;
 }
-
+.settings .option input[type="checkbox"] {
+    width: 30px;
+}
 .settings .hidden {
     display: none;
 }

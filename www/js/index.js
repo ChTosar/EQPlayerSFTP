@@ -62,10 +62,12 @@ window.onload = () => {
 
 function sftpConfig() {
 
-    document.getElementById('url').value = window.SFTP.host;
-    document.getElementById('port').value = window.SFTP.port;
-    document.getElementById('username').value = window.SFTP.username;
-    document.getElementById('path').value = window.SFTP.path;
+    if (window.SFTP.host) {
+        document.getElementById('url').value = window.SFTP.host;
+        document.getElementById('port').value = window.SFTP.port;
+        document.getElementById('username').value = window.SFTP.username;
+        document.getElementById('path').value = window.SFTP.path;
+    }
 
     document.getElementById('sshConfig').addEventListener('click', () => {
 
@@ -86,6 +88,7 @@ class Settings {
     #primaryColor;
     #bgColor;
     #white;
+    #statusbar;
 
     constructor() {
         if (Settings.#instance) {
@@ -98,9 +101,11 @@ class Settings {
         this.#primaryColor = document.getElementById('primaryColor');
         this.#bgColor = document.getElementById('bgColor');
         this.#white = document.getElementById('lighrColor');
+        this.#statusbar = document.getElementById('statusBar');
 
-        this.getColors();
-        this.setColors();
+        this.getConfig();
+        this.setConfig();
+
         this.#setupEventListeners();
     }
 
@@ -177,6 +182,17 @@ class Settings {
                 }
             });
         });
+
+        this.#statusbar.addEventListener('click', (event) => {
+            if(event.target.checked) {
+                StatusBar.hide();
+                window.config.statusBar = true;
+            } else {
+                StatusBar.show();
+                window.config.statusBar = false;
+            }
+            this.saveConfig();
+        });
     }
 
     resetMenu() {
@@ -216,6 +232,10 @@ class Settings {
         localStorage.setItem('themeColors', JSON.stringify(window.themeColors));
     }
 
+    saveConfig() {
+        localStorage.setItem('config', JSON.stringify(window.config));
+    }
+
     getColors() {
         const themeColors = localStorage.getItem('themeColors');
 
@@ -227,6 +247,30 @@ class Settings {
             window.themeColors.mainColor = '#ff2540';
             window.themeColors.bgLeds = '#222222';
         }
+    }
+
+    getConfig() {
+        const config = localStorage.getItem('config');
+
+        if (config) {
+            window.config = JSON.parse(themeColors);
+        } else {
+            window.config = {};
+            window.config.statusBar = true;
+        }
+
+        this.getColors();
+    }
+
+    setConfig() {
+        if (window.config.statusBar == true) {
+            this.#statusbar.checked = true;
+            StatusBar.show();
+        } else {
+            this.#statusbar.checked = false;
+            StatusBar.hide();
+        }
+        this.setColors();
     }
 }
 
@@ -254,6 +298,12 @@ class FileList {
         this.#segmentDisplay = document.querySelector("segment-display");
 
         this.#setupEventListeners();
+    }
+
+    getNextSong() {
+        const actual = this.#audio.getAttribute('src'); 
+        const index = this.#localItems.indexOf(actual); 
+        return this.#localItems[(index + 1) % this.#localItems.length];
     }
 
     async updateList() {
@@ -391,7 +441,7 @@ class FileList {
     #attachToplayer(fileName) {
         return new Promise((resolve, reject) => {
             window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => {
-                this.#audio.src = fileEntry.toNativeURL();
+                this.#audio.src = fileEntry.toURL();
                 this.#segmentDisplay.setAttribute('text', fileName);
                 window.speedControls.play(true);
                 resolve();
@@ -503,6 +553,11 @@ class SpeedControls {
                     this.#audio.currentTime = this.#audio.duration * position;
                 });
             }
+        });
+
+        this.#audio.addEventListener("ended", () => {
+            const nextSong = window.fileList.getNextSong();
+            this.#audio.src = nextSong.toURL();
         });
     }
 }
