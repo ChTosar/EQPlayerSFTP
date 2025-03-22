@@ -17,9 +17,8 @@ export class SFTP {
 
         var sshConfig = window.localStorage.getItem('sshConfig');
 
-        sshConfig = CryptoJS.AES.decrypt(sshConfig, device.uuid).toString(CryptoJS.enc.Utf8);
-
         if (sshConfig) {
+            sshConfig = CryptoJS.AES.decrypt(sshConfig, device.uuid).toString(CryptoJS.enc.Utf8);
             sshConfig = JSON.parse(sshConfig);
             this.host = sshConfig.host;
             this.username = sshConfig.username;
