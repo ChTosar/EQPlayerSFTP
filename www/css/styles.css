@@ -29,6 +29,12 @@ container {
     display: flex;
 }
 
+button,
+button:focus-visible {
+    outline: none;
+    user-select: none;
+}
+
 .controllers button {
     display: block;
     font-size: 1.5rem;
@@ -87,6 +93,7 @@ container.list {
     border-top: none;
     justify-content: space-between;
     display: flex;
+    user-select: none;
 }
 
 .list button.selected {
@@ -239,12 +246,13 @@ container.list {
     border-radius: 2px;
 }
 
-.form.about span {
+.form.about span, 
+.form.about pre {
     display: block;
     width: 190px;
     text-align: center;
     margin: 0.4rem;
-    color: #333;
+    color: #dbdbdb;
 }
 
 .form.about a {

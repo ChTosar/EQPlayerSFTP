@@ -101,6 +101,7 @@ class Settings {
     #bgColor;
     #white;
     #statusbar;
+    #moreInfo;
 
     constructor() {
         if (Settings.#instance) {
@@ -114,6 +115,7 @@ class Settings {
         this.#bgColor = document.getElementById('bgColor');
         this.#white = document.getElementById('lighrColor');
         this.#statusbar = document.getElementById('statusBar');
+        this.#moreInfo = document.querySelector('.about .moreInfo');
 
         this.getConfig();
         this.setConfig();
@@ -121,12 +123,24 @@ class Settings {
         this.#setupEventListeners();
     }
 
-    #setupEventListeners() {
-        this.#settings.addEventListener('click', () => {
-            const slideController = document.querySelector('.slideController');
-            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            slideController.scrollTo({ left: slideController.scrollLeft === 0 ? 250 : 0, behavior: 'smooth' });
+    settingToggle(close) {
+
+        const slideController = document.querySelector('.slideController');
+        close = close ? close : slideController.scrollLeft !== 0;
+
+        if (close) {
+            slideController.scrollTo({ left:  0, behavior: 'smooth' });
             this.resetMenu();
+        } else {
+            slideController.scrollTo({ left:  250, behavior: 'smooth' });
+            window.fileList.listToggle(true);
+        }
+    }
+
+    #setupEventListeners() {
+
+        this.#settings.addEventListener('click', () => {
+            this.settingToggle();
         });
 
         this.#colorSelect.addEventListener('change', (event) => {
@@ -175,6 +189,14 @@ class Settings {
             this.setColors();
         });
 
+        this.#moreInfo.addEventListener('click', (event) => {
+            const data = document.querySelector('pre.data');
+            data.innerHTML=
+            `width: ${window.screen.width}
+height: ${window.screen.height}
+pixelRatio: ${window.devicePixelRatio}`;
+        });
+
         const menus = [{name:"theme", position:"54"}, {name:"ssh", position:"21"}, {name:"about", position:"-14"}];
 
         menus.forEach(menu => {
@@ -205,6 +227,29 @@ class Settings {
             }
             this.saveConfig();
         });
+
+        (() => {
+            const equalizer = document.querySelector('classic-equalizer');
+            let touchStartX = 0;
+            let touchEndX = 0;
+        
+            equalizer.addEventListener("touchstart", (event) => {
+                touchStartX = event.touches[0].clientX;
+            });
+        
+            equalizer.addEventListener("touchend", (event) => {
+                touchEndX = event.changedTouches[0].clientX;
+                handleSwipe();
+            });
+        
+            const handleSwipe = () => {
+                const swipeThreshold = 40;
+                if ( touchEndX - touchStartX > swipeThreshold) {
+                    this.settingToggle(true);
+                }
+            }
+        })();
+
     }
 
     resetMenu() {
@@ -275,12 +320,14 @@ class Settings {
     }
 
     setConfig() {
-        if (window.config.statusBar == true) {
-            this.#statusbar.checked = true;
-            StatusBar.show();
-        } else {
-            this.#statusbar.checked = false;
-            StatusBar.hide();
+        if (window.cordova && window.StatusBar) {
+            if (window.config.statusBar == true) {
+                this.#statusbar.checked = true;
+                StatusBar.show();
+            } else {
+                this.#statusbar.checked = false;
+                StatusBar.hide();
+            }
         }
         this.setColors();
     }
@@ -413,6 +460,27 @@ class FileList {
         });
     }
 
+    async listToggle(close) {
+
+        const progressCanvas = document.getElementById("progressCanvas");
+
+        close = close ? close : window.scrollY !== 0; 
+
+        console.log('listToggle close: ', {close, listButton: this.#listButton.style});
+
+        if (close) {
+            this.#listButton.style.transform="";
+            window.scrollTo({top: 0, left: 0, behavior: 'smooth'});  
+        } else {
+            window.settings.settingToggle(true);
+            this.#listButton.style.transform="rotate(180deg)";
+            window.scrollTo({top: progressCanvas.offsetTop, left: 0, behavior: 'smooth'});
+            await this.localList();
+            this.#drawLocalItems();
+            this.#drawItems();
+        }
+    }
+
     async #setupEventListeners() {
 
         const localButton = document.querySelector(".localButton");
@@ -443,22 +511,7 @@ class FileList {
         });
 
         this.#listButton.addEventListener("click", async () => {
-            const progressCanvas = document.getElementById("progressCanvas");
-            window.scrollTo({
-                top: window.scrollY === 0 ? progressCanvas.offsetTop : 0,
-                left: 0,
-                behavior: 'smooth'
-            });
-
-            if (window.scrollY === 0) {
-                await this.localList();
-                this.#drawLocalItems();
-                this.#drawItems();
-                this.#listButton.style.transform="rotate(180deg)";
-            } else {
-                this.#listButton.style.transform="";
-            }
-
+            this.listToggle();
         });
     }
 
