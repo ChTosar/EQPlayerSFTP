@@ -4,10 +4,12 @@ export class FileList {
     #listButton;
     #remoteList;
     #localList;
+    #deviceList;
     #audio;
     #segmentDisplay;
     #items = [];
     #localItems = [];
+    #deviceItems = [];
     #lastCheck;
 
     constructor() {
@@ -19,6 +21,7 @@ export class FileList {
         this.#listButton = document.getElementById("list");
         this.#remoteList = document.querySelector(".list ul.remoteList");
         this.#localList = document.querySelector(".list ul.localList");
+        this.#deviceList = document.querySelector(".list ul.deviceList");
         this.#audio = document.querySelector("audio");
         this.#segmentDisplay = document.querySelector("segment-display");
 
@@ -46,6 +49,7 @@ export class FileList {
             window.resolveLocalFileSystemURL(cordova.file.dataDirectory, (fileSystem) => {        
                 let reader = fileSystem.createReader();
                 reader.readEntries((entries) => {
+                    console.log("localList entries: ", entries);
                     this.#localItems = entries.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
                     resolve(this.#localItems);
                   },
@@ -61,21 +65,46 @@ export class FileList {
         });
     }
 
+    async deviceList(folder) {
+        folder = folder ? folder : '';
+        return new Promise((resolve, reject) => {
+            window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory+folder, (fileSystem) => {        
+                let reader = fileSystem.createReader();
+                reader.readEntries((entries) => {
+                    console.log("entries: ", entries);
+                    this.#deviceItems = entries.filter(item => item.isDirectory || item.name.endsWith(".mp3"));
+                    console.log("deviceItems: ", this.#deviceItems);
+                    resolve(this.#deviceItems);
+                  },
+                  (err) => {
+                    console.log(err);
+                    reject(err);
+                  }
+                );
+            
+            }, (error) => {
+                console.error("deviceList: ", error);
+            });
+        });
+    }
+
     async #drawLocalItems() {
         this.#localList.innerHTML = '';
 
         this.#localItems.forEach(item => {
             const li = document.createElement('li');
 
+            li.file = {
+                filepath: item.filepath,
+                name: item.name,
+                isDirectory: item.isDirectory
+            };
+
             if (item.isDir) {
                 li.innerText = `/${item.name}`
             } else {
                 const nameDivided = item.name.split('.');
                 const extension = nameDivided.pop();
-                li.file = {
-                    filepath: item.filepath,
-                    name: item.name
-                };
                 li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
             }
 
@@ -92,6 +121,45 @@ export class FileList {
             });
         });
 
+    }
+
+    async #drawDeviceItems() {
+        this.#deviceList.innerHTML = '';
+
+        this.#deviceItems.forEach(item => {
+            const li = document.createElement('li');
+
+            li.file = {
+                filepath: item.filepath,
+                name: item.name,
+                isDirectory: item.isDirectory
+            };
+
+            if (item.isDirectory) {
+                li.innerText = `/${item.name}`
+            } else {
+                const nameDivided = item.name.split('.');
+                const extension = nameDivided.pop();
+                li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
+            }
+
+            this.#deviceList.appendChild(li);
+
+            li.addEventListener("click", async (event) => {
+                const fileName = event.target.file.name;
+
+                if (event.target.file.isDirectory) {
+                    await this.deviceList(fileName);
+                    this.#drawDeviceItems();
+                } else {
+                    try {
+                        await this.#attachToplayer(fileName);
+                    } catch (err) {
+                        console.error(err);
+                    }
+                }
+            });
+        });
     }
 
     async #drawItems() {
@@ -144,6 +212,7 @@ export class FileList {
             await this.localList();
             this.#drawLocalItems();
             this.#drawItems();
+            this.#drawDeviceItems();
         }
     }
 
@@ -151,8 +220,10 @@ export class FileList {
 
         const localButton = document.querySelector(".localButton");
         const remoteButton = document.querySelector(".remoteButton");
+        const deviceButton = document.querySelector(".deviceButton");
         const localList = document.querySelector(".localList");
         const remoteList = document.querySelector(".remoteList");
+        const deviceList = document.querySelector(".deviceList");
 
         localButton.addEventListener("click", async () => {
             localButton.classList.add("selected");
@@ -160,6 +231,8 @@ export class FileList {
 
             remoteButton.classList.remove("selected");
             remoteList.classList.remove("selected");
+            deviceButton.classList.remove("selected");
+            deviceList.classList.remove("selected");
 
             await this.localList();
             this.#drawItems();
@@ -171,9 +244,26 @@ export class FileList {
 
             localButton.classList.remove("selected");
             localList.classList.remove("selected");
-            
+            deviceButton.classList.remove("selected");
+            deviceList.classList.remove("selected");
+
             await this.updateList();
             this.#drawItems();
+        });
+
+        deviceButton.addEventListener("click", async () => {
+            deviceButton.classList.add("selected");
+            deviceList.classList.add("selected");
+
+            localButton.classList.remove("selected");
+            localList.classList.remove("selected");
+            remoteButton.classList.remove("selected");
+            remoteList.classList.remove("selected");
+
+            console.log("ok deviceList:");
+            
+            await this.deviceList();
+            this.#drawDeviceItems();
         });
 
         this.#listButton.addEventListener("click", async () => {

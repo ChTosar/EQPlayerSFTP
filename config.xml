@@ -12,12 +12,14 @@
         <config-file parent="/*" target="AndroidManifest.xml">
             <uses-permission android:name="android.permission.INTERNET" />
             <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+            <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
         </config-file>
         <preference name="SplashScreen" value="screen"/>
         <preference name="SplashScreenDelay" value="3000"/>
         <preference name="FadeSplashScreenDuration" value="500"/>
         <preference name="ShowSplashScreenSpinner" value="false"/>
-        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/android/icon/drawable-xxxhdpi-icon.png"/>
+        <preference name="AndroidWindowSplashScreenAnimatedIcon" value="resources/android/splash/drawable-land-ldpi-screen.png"/>
         <preference name="AndroidWindowSplashScreenBackground" value="#000000"/>
 
         <icon density="hdpi" src="resources/android/icon/drawable-hdpi-icon.png" />
