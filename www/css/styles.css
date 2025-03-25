@@ -29,8 +29,14 @@ container {
     display: flex;
 }
 
+segment-display {
+    padding-bottom: 0.3rem;
+}
+
 button,
+button:focus,
 button:focus-visible {
+    -webkit-tap-highlight-color: transparent;
     outline: none;
     user-select: none;
 }

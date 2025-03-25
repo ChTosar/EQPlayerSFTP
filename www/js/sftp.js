@@ -10,7 +10,9 @@ export class SFTP {
     status = 'None';
 
     constructor() {
-        this.loadConfig();
+        if (window.cordova) {
+            this.loadConfig();
+        }
     }
 
     loadConfig() {

@@ -17,21 +17,22 @@ window.onload = () => {
     progressCanvas.width = progressCanvas.offsetWidth;
     progressCanvas.height = 5;
 
-    segmentDisplay.segment.SegmentWidth = 0.07;
-    segmentDisplay.segment.BevelWidth = 0.9;
-    segmentDisplay.segment.BevelWidth = 0.9;
+    segmentDisplay.segment.SegmentWidth = 0.12;
+    segmentDisplay.segment.BevelWidth = 0.5;
+    segmentDisplay.segment.BevelWidth = 0.5;
     segmentDisplay.segment.Padding = 3;
     segmentDisplay.segment.SegmentInterval = 0.05;
     segmentDisplay.segment.SideBevelEnabled = false;
 
-    equalizer.setAttribute('height', (screen.height*280)/480);
-    equalizer.setAttribute('rows', 26);
+    equalizer.barsMarginX = 5;
+    equalizer.setAttribute('height', (screen.height*270)/480);
+    equalizer.setAttribute('rows', Math.round((screen.height*26)/480));
 
     function drawProgress() {
         const ctx = progressCanvas.getContext("2d");
-        const totalPixels = Math.floor(progressCanvas.width / (pixelSize + margin));
+        const totalPixels = Math.round(progressCanvas.width / (pixelSize + margin));
         const progress = audio.currentTime / audio.duration;
-        const filledPixels = Math.floor(progress * totalPixels);
+        const filledPixels = Math.round(progress * totalPixels);
 
         ctx.clearRect(0, 0, progressCanvas.width, progressCanvas.height);
 
