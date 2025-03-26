@@ -8,9 +8,11 @@ export class SFTP {
     #password;
     client;
     status = 'None';
+    #localPath;
 
     constructor() {
         if (window.cordova) {
+            this.#localPath = (localStorage.getItem('defaultLocalPath') || cordova.file.externalRootDirectory+'Music/').replace('file:///', '/');
             this.loadConfig();
         }
     }
@@ -92,19 +94,26 @@ export class SFTP {
 
     download(filename) {
         return new Promise((resolve, reject) => {
-            this.client.downloadFile(`${this.path}/${filename}`, `${cordova.file.dataDirectory.replace('file:///', '/')}${filename}`, {
-                success:function(download){
-                    console.log(download);
-            
-                    if(download.finished == true){
-                        resolve(download);
-                    }else{
-                        console.log(`Progress download: ${download.progress}% of ${download.filesizebytes} total`);
+            const finalyLocal = `${this.#localPath}${filename}`.replace('/','file:///');
+
+            this.client.downloadFile(`${this.path}/${filename}`, `${this.#localPath}${filename}`, {
+                success:function(download){    
+                    try {        
+                        if(download.finished == true && download.success && download.success == true){                            
+                            window.resolveLocalFileSystemURL(finalyLocal, (fileEntry) => {
+                                    resolve(fileEntry.toURL());
+                                }, 
+                                (error) => {
+                                    reject(`Error al obtener el archivo: ${error.code}`);
+                                }
+                            );
+                        }
+                    } catch(err) {
+                        reject(err);
                     }
                 },
-                error:function(er){
-                    console.log(er);
-                    reject(er);
+                error:function(err){
+                    reject(err);
                 }
             });            
         });

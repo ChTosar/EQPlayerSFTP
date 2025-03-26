@@ -5,7 +5,7 @@ import { FileList } from './fileList.js';
 import { Settings } from './settings.js'
 import { SpeedControls } from "./speedControls.js";
 
-window.onload = () => {
+document.addEventListener("deviceready", () => {
 
     const segmentDisplay = document.querySelector('segment-display');
     const equalizer = document.querySelector('classic-equalizer');
@@ -59,7 +59,7 @@ window.onload = () => {
     setTimeout(() => {
         window.scrollTo({top:0});
     }, 0);
-};
+});
 
 function sftpConfig() {
 

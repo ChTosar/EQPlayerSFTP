@@ -3,14 +3,13 @@ export class FileList {
     static #instance;
     #listButton;
     #remoteList;
-    #localList;
     #deviceList;
     #audio;
     #segmentDisplay;
     #items = [];
-    #localItems = [];
     #deviceItems = [];
     #lastCheck;
+    defaultLocalPath;
 
     constructor() {
         if (FileList.#instance) {
@@ -20,18 +19,18 @@ export class FileList {
 
         this.#listButton = document.getElementById("list");
         this.#remoteList = document.querySelector(".list ul.remoteList");
-        this.#localList = document.querySelector(".list ul.localList");
         this.#deviceList = document.querySelector(".list ul.deviceList");
         this.#audio = document.querySelector("audio");
         this.#segmentDisplay = document.querySelector("segment-display");
+        this.defaultLocalPath = localStorage.getItem('defaultLocalPath') || cordova.file.externalRootDirectory + 'Music/';
 
         this.#setupEventListeners();
     }
 
     getNextSong() {
         const actual = this.#audio.getAttribute('src'); 
-        const index = this.#localItems.indexOf(actual); 
-        return this.#localItems[(index + 1) % this.#localItems.length];
+        const index = this.#deviceItems.indexOf(actual); 
+        return this.#deviceItems[(index + 1) % this.#deviceItems.length];
     }
 
     async updateList() {
@@ -44,40 +43,17 @@ export class FileList {
         }
     }
 
-    async localList() {
-        return new Promise((resolve, reject) => {
-            window.resolveLocalFileSystemURL(cordova.file.dataDirectory, (fileSystem) => {        
-                let reader = fileSystem.createReader();
-                reader.readEntries((entries) => {
-                    console.log("localList entries: ", entries);
-                    this.#localItems = entries.filter(item => (item.isDir && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
-                    resolve(this.#localItems);
-                  },
-                  (err) => {
-                    console.log(err);
-                    reject(err);
-                  }
-                );
-            
-            }, (error) => {
-                console.error(error);
-            });
-        });
-    }
-
     async deviceList(folder) {
         folder = folder ? folder : '';
         return new Promise((resolve, reject) => {
-            window.resolveLocalFileSystemURL(cordova.file.externalRootDirectory+folder, (fileSystem) => {        
+            window.resolveLocalFileSystemURL(this.defaultLocalPath+folder, (fileSystem) => {        
                 let reader = fileSystem.createReader();
                 reader.readEntries((entries) => {
-                    console.log("entries: ", entries);
-                    this.#deviceItems = entries.filter(item => item.isDirectory || item.name.endsWith(".mp3"));
-                    console.log("deviceItems: ", this.#deviceItems);
+                    this.#deviceItems = entries.filter(item => (item.isDirectory && !item.name.startsWith('.')) || item.name.endsWith(".mp3"));
                     resolve(this.#deviceItems);
                   },
                   (err) => {
-                    console.log(err);
+                    console.error(err);
                     reject(err);
                   }
                 );
@@ -88,41 +64,6 @@ export class FileList {
         });
     }
 
-    async #drawLocalItems() {
-        this.#localList.innerHTML = '';
-
-        this.#localItems.forEach(item => {
-            const li = document.createElement('li');
-
-            li.file = {
-                filepath: item.filepath,
-                name: item.name,
-                isDirectory: item.isDirectory
-            };
-
-            if (item.isDir) {
-                li.innerText = `/${item.name}`
-            } else {
-                const nameDivided = item.name.split('.');
-                const extension = nameDivided.pop();
-                li.innerHTML = `${nameDivided}<div class='badge'>${extension}<div>`;
-            }
-
-            this.#localList.appendChild(li);
-
-            li.addEventListener("click", async (event) => {
-                const fileName = event.target.file.name;
-                try {
-                    await this.#attachToplayer(fileName);
-                } catch (err) {
-                    await window.SFTP.download(fileName);
-                    await this.#attachToplayer(fileName);
-                }
-            });
-        });
-
-    }
-
     async #drawDeviceItems() {
         this.#deviceList.innerHTML = '';
 
@@ -130,7 +71,7 @@ export class FileList {
             const li = document.createElement('li');
 
             li.file = {
-                filepath: item.filepath,
+                filepath: item.toURL(),
                 name: item.name,
                 isDirectory: item.isDirectory
             };
@@ -153,12 +94,24 @@ export class FileList {
                     this.#drawDeviceItems();
                 } else {
                     try {
-                        await this.#attachToplayer(fileName);
+                        await this.#attachToPlayer(event.target.file.filepath);
                     } catch (err) {
                         console.error(err);
                     }
                 }
             });
+        });
+    }
+
+    #getURLfromFile(filePath) {
+        return new Promise((resolve, reject) => {
+            window.resolveLocalFileSystemURL(filePath, (fileEntry) => {
+                resolve(fileEntry.toURL());
+                }, 
+                (error) => {
+                    reject(`Error al obtener el archivo: ${error.code}`);
+                }
+            );
         });
     }
 
@@ -183,12 +136,12 @@ export class FileList {
             this.#remoteList.appendChild(li);
 
             li.addEventListener("click", async (event) => {
-                const fileName = event.target.file.name;
+                const fileName = await this.#getURLfromFile(this.defaultLocalPath + event.target.file.name);
                 try {
-                    await this.#attachToplayer(fileName);
+                    await this.#attachToPlayer(fileName);
                 } catch (err) {
-                    await window.SFTP.download(fileName);
-                    await this.#attachToplayer(fileName);
+                    const newLocal = await window.SFTP.download(fileName);
+                    await this.#attachToPlayer(newLocal);
                 }
             });
         });
@@ -200,8 +153,6 @@ export class FileList {
 
         close = close ? close : window.scrollY !== 0; 
 
-        console.log('listToggle close: ', {close, listButton: this.#listButton.style});
-
         if (close) {
             this.#listButton.style.transform="";
             window.scrollTo({top: 0, left: 0, behavior: 'smooth'});  
@@ -209,8 +160,7 @@ export class FileList {
             window.settings.settingToggle(true);
             this.#listButton.style.transform="rotate(180deg)";
             window.scrollTo({top: progressCanvas.offsetTop, left: 0, behavior: 'smooth'});
-            await this.localList();
-            this.#drawLocalItems();
+            await this.deviceList();
             this.#drawItems();
             this.#drawDeviceItems();
         }
@@ -218,32 +168,16 @@ export class FileList {
 
     async #setupEventListeners() {
 
-        const localButton = document.querySelector(".localButton");
         const remoteButton = document.querySelector(".remoteButton");
         const deviceButton = document.querySelector(".deviceButton");
-        const localList = document.querySelector(".localList");
         const remoteList = document.querySelector(".remoteList");
         const deviceList = document.querySelector(".deviceList");
 
-        localButton.addEventListener("click", async () => {
-            localButton.classList.add("selected");
-            localList.classList.add("selected");
-
-            remoteButton.classList.remove("selected");
-            remoteList.classList.remove("selected");
-            deviceButton.classList.remove("selected");
-            deviceList.classList.remove("selected");
-
-            await this.localList();
-            this.#drawItems();
-        });
 
         remoteButton.addEventListener("click", async () => {
             remoteButton.classList.add("selected");
             remoteList.classList.add("selected");
 
-            localButton.classList.remove("selected");
-            localList.classList.remove("selected");
             deviceButton.classList.remove("selected");
             deviceList.classList.remove("selected");
 
@@ -255,12 +189,8 @@ export class FileList {
             deviceButton.classList.add("selected");
             deviceList.classList.add("selected");
 
-            localButton.classList.remove("selected");
-            localList.classList.remove("selected");
             remoteButton.classList.remove("selected");
             remoteList.classList.remove("selected");
-
-            console.log("ok deviceList:");
             
             await this.deviceList();
             this.#drawDeviceItems();
@@ -271,17 +201,23 @@ export class FileList {
         });
     }
 
-    #attachToplayer(fileName) {
-        return new Promise((resolve, reject) => {
-            window.resolveLocalFileSystemURL(`${cordova.file.dataDirectory}/${fileName}`, (fileEntry) => {
-                this.#audio.src = fileEntry.toURL();
-                this.#segmentDisplay.setAttribute('text', fileName);
+    #attachToPlayer(filePath) {
+
+        return new Promise((resolve, reject) =>{
+
+            this.#audio.onerror = (err) => {
+                reject(err);
+            };
+
+            this.#audio.oncanplaythrough = () => {
+                this.#segmentDisplay.setAttribute('text', filePath);
                 window.speedControls.play(true);
-                resolve();
-            }, (error) => {
-                console.error(error);
-                reject(error);
-            });
+                resolve(true);
+
+            };
+
+            this.#audio.src = filePath;
         });
+
     }
 }
