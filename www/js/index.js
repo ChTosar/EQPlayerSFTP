@@ -58,7 +58,8 @@ document.addEventListener("deviceready", () => {
 
     setTimeout(() => {
         window.scrollTo({top:0});
-    }, 0);
+        window.fileList.playNextSong();
+    }, 250);
 });
 
 function sftpConfig() {

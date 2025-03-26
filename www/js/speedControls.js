@@ -101,8 +101,7 @@ export class SpeedControls {
         });
 
         this.#audio.addEventListener("ended", () => {
-            const nextSong = window.fileList.getNextSong();
-            this.#audio.src = nextSong.toURL();
+            window.fileList.playNextSong();            
         });
     }
 }

@@ -28,9 +28,15 @@ export class FileList {
     }
 
     getNextSong() {
-        const actual = this.#audio.getAttribute('src'); 
-        const index = this.#deviceItems.indexOf(actual); 
+        const actual = this.#segmentDisplay.getAttribute('text'); 
+        const index = this.#deviceItems.findIndex(device => device.name === actual);; 
         return this.#deviceItems[(index + 1) % this.#deviceItems.length];
+    }
+
+    async playNextSong() {
+        const file = this.getNextSong();
+        const url = await this.#getURLfromFile(file.nativeURL);
+        this.#attachToPlayer(url, file.name);
     }
 
     async updateList() {
@@ -94,7 +100,7 @@ export class FileList {
                     this.#drawDeviceItems();
                 } else {
                     try {
-                        await this.#attachToPlayer(event.target.file.filepath);
+                        await this.#attachToPlayer(event.target.file.filepath, fileName);
                     } catch (err) {
                         console.error(err);
                     }
@@ -136,12 +142,12 @@ export class FileList {
             this.#remoteList.appendChild(li);
 
             li.addEventListener("click", async (event) => {
-                const fileName = await this.#getURLfromFile(this.defaultLocalPath + event.target.file.name);
+                const filePath = await this.#getURLfromFile(this.defaultLocalPath + event.target.file.name);
                 try {
-                    await this.#attachToPlayer(fileName);
+                    await this.#attachToPlayer(filePath, event.target.file.name);
                 } catch (err) {
-                    const newLocal = await window.SFTP.download(fileName);
-                    await this.#attachToPlayer(newLocal);
+                    const newLocal = await window.SFTP.download(filePath);
+                    await this.#attachToPlayer(newLocal, event.target.file.name);
                 }
             });
         });
@@ -199,9 +205,11 @@ export class FileList {
         this.#listButton.addEventListener("click", async () => {
             this.listToggle();
         });
+
+        await this.deviceList();
     }
 
-    #attachToPlayer(filePath) {
+    #attachToPlayer(filePath, fileName) {
 
         return new Promise((resolve, reject) =>{
 
@@ -210,10 +218,9 @@ export class FileList {
             };
 
             this.#audio.oncanplaythrough = () => {
-                this.#segmentDisplay.setAttribute('text', filePath);
+                this.#segmentDisplay.setAttribute('text', fileName);
                 window.speedControls.play(true);
                 resolve(true);
-
             };
 
             this.#audio.src = filePath;
