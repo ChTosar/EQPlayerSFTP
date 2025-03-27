@@ -59,7 +59,7 @@ document.addEventListener("deviceready", () => {
     setTimeout(() => {
         window.scrollTo({top:0});
         window.fileList.playNextSong();
-    }, 250);
+    }, 150);
 });
 
 function sftpConfig() {

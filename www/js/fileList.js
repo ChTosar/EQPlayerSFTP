@@ -33,7 +33,19 @@ export class FileList {
         return this.#deviceItems[(index + 1) % this.#deviceItems.length];
     }
 
+    getPrevtSong() {
+        const actual = this.#segmentDisplay.getAttribute('text'); 
+        const index = this.#deviceItems.findIndex(device => device.name === actual);; 
+        return this.#deviceItems[(index - 1) % this.#deviceItems.length];
+    }
+
     async playNextSong() {
+        const file = this.getNextSong();
+        const url = await this.#getURLfromFile(file.nativeURL);
+        this.#attachToPlayer(url, file.name);
+    }
+
+    async playPrevSong() {
         const file = this.getNextSong();
         const url = await this.#getURLfromFile(file.nativeURL);
         this.#attachToPlayer(url, file.name);

@@ -5,13 +5,14 @@ export class SpeedControls {
     #nextButton;
     #prevButton;
     #progressCanvas;
-    #velocidadActual = 1.0;
-    #tiempoUltimaAccion = 0;
-    #incremento = 1.0;
-    #velocidadMaxima = 5.0;
-    #umbralTiempo = 250;
-    #intervalo;
-    #velocidadRetroceso = -1.0;
+    #actualSpeed = 1.0;
+    #lastAction = 0;
+    #increment = 1.0;
+    #maxSpeed = 5.0;
+    #timeThreshold = 250;
+    #interval;
+    #stopInterval;
+    #backTimeSpeed = -1.0;
 
     constructor() {
         if (SpeedControls.#instance) {
@@ -39,53 +40,64 @@ export class SpeedControls {
         }
     }
 
-    #actualizarVelocidad() {
-        const ahora = Date.now();
-        const tiempoDesdeUltimaAccion = ahora - this.#tiempoUltimaAccion;
-        this.#velocidadActual = tiempoDesdeUltimaAccion <= this.#umbralTiempo
-            ? Math.min(this.#velocidadActual + this.#incremento, this.#velocidadMaxima)
+    #updateSpeed() {
+        const now = Date.now();
+        const tiempoDesdeUltimaAccion = now - this.#lastAction;
+        this.#actualSpeed = tiempoDesdeUltimaAccion <= this.#timeThreshold
+            ? Math.min(this.#actualSpeed + this.#increment, this.#maxSpeed)
             : 2.0;
-        this.#audio.playbackRate = this.#velocidadActual;
-        this.#tiempoUltimaAccion = ahora;
+        this.#audio.playbackRate = this.#actualSpeed;
+        this.#lastAction = now;
     }
 
-    iniciarAceleracion() {
-        this.#actualizarVelocidad();
-        this.#audio.playbackRate = Math.min(this.#audio.playbackRate + this.#incremento, this.#velocidadMaxima);
+    startAcceleration() {
+        this.#updateSpeed();
+        this.#audio.playbackRate = Math.min(this.#audio.playbackRate + this.#increment, this.#maxSpeed);
     }
 
-    detenerAceleracion() {
-        clearInterval(this.#intervalo);
-        setTimeout(() => {
-            if (Date.now() - this.#tiempoUltimaAccion > this.#umbralTiempo) {
-                this.#audio.playbackRate = 1.0;
-                this.#velocidadActual = 1.0;
+    stopAcceleration() {
+        clearInterval(this.#interval);
+        clearInterval(this.#stopInterval);
+        this.#stopInterval = setTimeout(() => {
+            if (Date.now() - this.#lastAction > this.#timeThreshold) {
+                if (this.#actualSpeed == 2.0) {
+                    window.fileList.playNextSong();
+                } else {
+                    this.#audio.playbackRate = 1.0;
+                    this.#actualSpeed = 1.0;
+                }
             }
-        }, this.#umbralTiempo);
+        }, this.#timeThreshold);
     }
 
-    iniciarRetroceso() {
-        this.#velocidadRetroceso = -2.0;
-        this.#intervalo = setInterval(() => {
-            this.#audio.currentTime = Math.max(this.#audio.currentTime + this.#velocidadRetroceso, 0);
-        }, this.#umbralTiempo);
+    startBackspace() {
+        this.#backTimeSpeed = -2.0;
+        this.#interval = setInterval(() => {
+            this.#audio.currentTime = Math.max(this.#audio.currentTime + this.#backTimeSpeed, 0);
+        }, this.#timeThreshold);
     }
 
-    detenerRetroceso() {
-        clearInterval(this.#intervalo);
-        setTimeout(() => {
-            if (Date.now() - this.#tiempoUltimaAccion > this.#umbralTiempo) {
-                this.#velocidadRetroceso = -1.0;
+    stopBackspace() {
+        clearInterval(this.#interval);
+        clearInterval(this.#stopInterval);
+
+        this.#stopInterval = setTimeout(() => {
+            if (Date.now() - this.#lastAction > this.#timeThreshold) {
+                if (this.#backTimeSpeed == 2.0) {
+                    window.fileList.playPrevSong();
+                } else {
+                    this.#backTimeSpeed = -1.0;
+                }
             }
-        }, this.#umbralTiempo);
+        }, this.#timeThreshold);
     }
 
     #setupEventListeners() {
         this.#playButton.addEventListener("click", () => this.play());
-        this.#nextButton.addEventListener("mousedown", () => this.iniciarAceleracion());
-        this.#nextButton.addEventListener("mouseup", () => this.detenerAceleracion());
-        this.#prevButton.addEventListener("mousedown", () => this.iniciarRetroceso());
-        this.#prevButton.addEventListener("mouseup", () => this.detenerRetroceso());
+        this.#nextButton.addEventListener("mousedown", () => this.startAcceleration());
+        this.#nextButton.addEventListener("mouseup", () => this.stopAcceleration());
+        this.#prevButton.addEventListener("mousedown", () => this.startBackspace());
+        this.#prevButton.addEventListener("mouseup", () => this.stopBackspace());
 
         this.#progressCanvas.addEventListener("click", (event) => {
             const positionX = event.offsetX;
