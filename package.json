@@ -1,6 +1,6 @@
 {
-  "name": "chtv.classicplayerssh.app",
-  "displayName": "classicPlayerSsh",
+  "name": "app.chtosar.eqplayersftp",
+  "displayName": "eqplayersftp",
   "version": "1.0.0",
   "description": "Music player from sftp",
   "main": "index.js",
@@ -9,7 +9,8 @@
     "server": "cd ./www && python3 -m http.server",
     "build": "webpack",
     "cordova": "cordova platform rm android && cordova platform add android && cordova clean android && cordova build android",
-    "install": "adb install platforms/android/app/build/outputs/apk/debug/app-debug.apk"
+    "install": "adb install platforms/android/app/build/outputs/apk/debug/app-debug.apk",
+    "release": "cordova build android --release -- --packageType=bundle"
   },
   "keywords": [
     "ecosystem:cordova"

@@ -18,6 +18,12 @@ container {
     box-sizing: border-box;
 }
 
+@media screen and (orientation: portrait) {
+    container {
+        padding: 12% 6%;
+    }
+}
+
 .controllers {
     width: 100%;
     display: flex;

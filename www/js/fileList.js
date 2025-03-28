@@ -154,11 +154,11 @@ export class FileList {
             this.#remoteList.appendChild(li);
 
             li.addEventListener("click", async (event) => {
-                const filePath = await this.#getURLfromFile(this.defaultLocalPath + event.target.file.name);
                 try {
+                    const filePath = await this.#getURLfromFile(this.defaultLocalPath + event.target.file.name);
                     await this.#attachToPlayer(filePath, event.target.file.name);
                 } catch (err) {
-                    const newLocal = await window.SFTP.download(filePath);
+                    const newLocal = await window.SFTP.download(event.target.file.name);
                     await this.#attachToPlayer(newLocal, event.target.file.name);
                 }
             });
